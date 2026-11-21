@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ДЭ 09.02.07-2-2027 — Тренажёр</title>
+<style>
+:root{
+  --bg:#f3f6f8; --card:#fff; --ink:#1d2733; --muted:#5c6b7a;
+  --line:#dde5ea; --accent:#2E8B57; --accent-d:#1f6a41; --soft:#e8f3ec;
+  --red:#c0392b; --blue:#2b6cb0; --code:#0f1720; --code-ink:#d7e3dd;
+  --shadow:0 1px 3px rgba(20,40,60,.10);
+}
+body.dark{
+  --bg:#121a22; --card:#1b2630; --ink:#e6eef4; --muted:#9fb0be;
+  --line:#2c3b47; --accent:#3cb371; --accent-d:#7ddba5; --soft:#20362a;
+  --red:#ff7b6b; --blue:#7fb4ee;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+header{
+  position:sticky; top:0; z-index:20; background:var(--card);
+  border-bottom:1px solid var(--line); padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+header h1{font-size:16px;margin:0;flex:1;line-height:1.25}
+header h1 small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.icon-btn{
+  border:1px solid var(--line); background:var(--bg); color:var(--ink);
+  width:38px;height:38px;border-radius:10px;font-size:17px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+main{padding:12px 12px 96px;max-width:820px;margin:0 auto}
+section{display:none}
+section.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--accent-d)}
+.card h3{font-size:14px;margin:14px 0 6px}
+p{margin:6px 0}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.btn{
+  border:0;border-radius:11px;padding:11px 14px;font-size:14px;font-weight:600;
+  background:var(--soft);color:var(--accent-d);cursor:pointer;min-height:44px;
+}
+button.btn.primary{background:var(--accent);color:#fff}
+button.btn.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:500}
+button.btn:disabled{opacity:.45}
+select,input[type=text],input[type=number],textarea{
+  width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;
+  background:var(--bg);color:var(--ink);font-size:14px;font-family:inherit;
+}
+textarea{font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.45;min-height:120px;resize:vertical}
+label.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);min-height:44px}
+label.chk:last-child{border-bottom:0}
+label.chk input{width:20px;height:20px;flex:0 0 auto;margin-top:2px;accent-color:var(--accent)}
+label.chk span{flex:1;font-size:14px}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--accent-d);white-space:nowrap}
+.bar{height:9px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+pre,.theory{
+  background:var(--code);color:var(--code-ink);border-radius:11px;padding:12px;
+  overflow:auto;font:12.5px/1.55 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;
+}
+.theory{font-size:13.5px;white-space:pre-wrap;max-height:none}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}
+details>summary{padding:12px 14px;font-weight:650;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"▾";color:var(--muted)}
+details[open]>summary::after{content:"▴"}
+details>.body{padding:0 12px 10px;border-top:1px solid var(--line)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px;margin:7px 0;border:1px solid var(--line);
+  border-radius:11px;background:var(--card);min-height:46px;cursor:pointer}
+.opt input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--accent);margin-top:1px}
+.opt span{flex:1}
+.opt.ok{border-color:var(--accent);background:var(--soft);color:var(--accent-d);font-weight:650}
+.opt.bad{border-color:var(--red);color:var(--red)}
+.feedback{border-radius:11px;padding:12px;margin-top:10px;font-size:13.5px;white-space:pre-wrap}
+.feedback.ok{background:var(--soft);color:var(--accent-d)}
+.feedback.bad{background:rgba(192,57,43,.10);color:var(--red)}
+table{border-collapse:collapse;width:100%;font:12px/1.4 ui-monospace,Consolas,monospace;margin:6px 0}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;white-space:nowrap}
+th{background:var(--soft);color:var(--accent-d)}
+.kpi{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kpi:last-child{border-bottom:0}
+.kpi b{color:var(--accent-d)}
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+  border-top:1px solid var(--line);display:flex;overflow-x:auto;
+  padding-bottom:env(safe-area-inset-bottom);scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  flex:1 0 78px;min-width:78px;min-height:60px;border:0;background:none;color:var(--muted);
+  font-size:10.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;
+}
+nav button .ic{font-size:19px;line-height:1}
+nav button.on{color:var(--accent-d);font-weight:700;background:var(--soft)}
+.big{font-size:26px;font-weight:800;color:var(--accent-d)}
+.timer{font:26px/1 ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:1px;color:var(--accent-d)}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:var(--soft);color:var(--accent-d);margin-right:5px}
+.hr{height:1px;background:var(--line);margin:12px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>ДЭ 09.02.07-2-2027 «Программист»<small>5 заданий · 100 баллов · офлайн</small></h1>
+  <button class="icon-btn" id="themeBtn" title="Тема">🌙</button>
+</header>
+
+<main>
+<!-- ================= ПЛАН ================= -->
+<section id="tab-plan" class="active">
+  <div class="card">
+    <h2>План на 12 недель</h2>
+    <div class="bar"><i id="planBar" style="width:0%"></i></div>
+    <p class="muted" id="planInfo">—</p>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost" id="planThisWeek">Только текущая неделя</button>
+      <button class="btn ghost" id="planReset">Сбросить план</button>
+    </div>
+  </div>
+  <div id="planList"></div>
+</section>
+
+<!-- ================= ТЕОРИЯ ================= -->
+<section id="tab-theory">
+  <div class="card">
+    <h2>Теория</h2>
+    <select id="lessonSel"></select>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="lessonRead">Отметить прочитанным</button>
+    </div>
+    <p class="muted" id="lessonMeta" style="margin-top:8px"></p>
+  </div>
+  <div class="card"><div class="theory" id="lessonText"></div></div>
+</section>
+
+<!-- ================= ТЕСТЫ ================= -->
+<section id="tab-quiz">
+  <div class="card">
+    <h2>Тесты</h2>
+    <div class="row">
+      <select id="quizTopic" style="flex:1;min-width:140px"></select>
+      <button class="btn ghost" id="quiz10">10 случайных</button>
+      <button class="btn primary" id="quiz20">Экзамен: 20</button>
+    </div>
+    <p class="muted" id="quizScore" style="margin-top:8px">—</p>
+  </div>
+  <div class="card" id="quizCard">
+    <h2 id="quizQ">Нажми «10 случайных» или «Экзамен: 20 вопросов».</h2>
+    <div id="quizOpts"></div>
+    <div class="feedback" id="quizFb" style="display:none"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="quizAnswer" disabled>Ответить</button>
+      <button class="btn ghost" id="quizNext" disabled>Следующий →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SQL ================= -->
+<section id="tab-sql">
+  <div class="card">
+    <h2>SQL-практика</h2>
+    <select id="sqlSel"></select>
+    <p class="muted" id="sqlTask" style="margin-top:8px"></p>
+    <div class="note">База создаётся заново при каждой проверке — экспериментируй без страха. Движок SQLite встроен в приложение, интернет не нужен.</div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Твой SQL</h3>
+    <textarea id="sqlInput" spellcheck="false" placeholder="SELECT ... FROM products;"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="sqlCheck">▶ Проверить</button>
+      <button class="btn ghost" id="sqlHint">Подсказка</button>
+      <button class="btn ghost" id="sqlShow">Эталон</button>
+      <button class="btn ghost" id="sqlSchema">Структура БД</button>
+      <button class="btn ghost" id="sqlClear">Очистить</button>
+    </div>
+  </div>
+  <div class="card"><pre id="sqlOut">Результат проверки появится здесь.</pre></div>
+</section>
+
+<!-- ================= ПРОБНИК ================= -->
+<section id="tab-exam">
+  <div class="card">
+    <h2>Пробный экзамен</h2>
+    <div class="row" style="justify-content:space-between">
+      <div><div class="timer" id="examTimer">04:00:00</div><div class="note">ДЭ ПУ · 4 часа</div></div>
+      <div style="text-align:right"><div class="big" id="examScore">0 / 100</div><div class="muted" id="examGrade">Оценка: —</div></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="examStart">▶ Старт / Пауза</button>
+      <button class="btn ghost" id="examTimerReset">Сброс</button>
+    </div>
+    <div class="hr"></div>
+    <div class="row">
+      <span class="muted">Шкала (уточни у куратора):</span>
+      <label class="muted">«3» <input type="number" id="th3" min="0" max="100" style="width:64px;padding:6px"></label>
+      <label class="muted">«4» <input type="number" id="th4" min="0" max="100" style="width:64px;padding:6px"></label>
+      <label class="muted">«5» <input type="number" id="th5" min="0" max="100" style="width:64px;padding:6px"></label>
+    </div>
+    <p class="muted" id="examNeed"></p>
+    <div class="row">
+      <button class="btn primary" id="examFinish">Завершить пробник</button>
+      <button class="btn ghost" id="examClear">Снять галочки</button>
+    </div>
+  </div>
+  <div id="examList"></div>
+</section>
+
+<!-- ================= ШПАРГАЛКИ ================= -->
+<section id="tab-sheets">
+  <div class="card">
+    <h2>Шпаргалки</h2>
+    <select id="sheetSel"></select>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="sheetCopy">Скопировать</button>
+      <button class="btn ghost" id="sheetCopyAll">Скопировать всё</button>
+    </div>
+  </div>
+  <div class="card"><h3 id="sheetTitle" style="margin-top:0"></h3><pre id="sheetCode"></pre></div>
+</section>
+
+<!-- ================= ПРОГРЕСС ================= -->
+<section id="tab-progress">
+  <div class="card">
+    <h2>Мой прогресс</h2>
+    <div class="big" id="prOverall">0%</div>
+    <div class="bar"><i id="prBar" style="width:0%"></i></div>
+    <p class="muted" id="prVerdict"></p>
+    <div id="prStats"></div>
+  </div>
+  <div class="card"><h2>Слабые темы тестов</h2><div id="prTopics"></div></div>
+  <div class="card"><h2>История пробников</h2><div id="prAttempts"></div></div>
+  <div class="card">
+    <h2>Что делать прямо сейчас</h2>
+    <div class="theory" id="prTips"></div>
+  </div>
+  <div class="card">
+    <h2>Перенести прогресс</h2>
+    <p class="muted">Скопируй текст и вставь его в тренажёр на компьютере (или наоборот), чтобы продолжить с того же места.</p>
+    <div class="row"><button class="btn ghost" id="prExport">Скопировать JSON</button><button class="btn ghost" id="prImport">Вставить JSON</button></div>
+    <textarea id="prJson" style="margin-top:10px;min-height:90px" placeholder="Вставь сюда JSON и нажми «Вставить JSON»"></textarea>
+  </div>
+  <div class="card"><button class="btn ghost" id="prReset" style="color:var(--red)">Сбросить весь прогресс</button></div>
+</section>
+</main>
+
+<nav id="nav">
+  <button data-tab="plan" class="on"><span class="ic">📅</span>План</button>
+  <button data-tab="theory"><span class="ic">📖</span>Теория</button>
+  <button data-tab="quiz"><span class="ic">✅</span>Тесты</button>
+  <button data-tab="sql"><span class="ic">🗄</span>SQL</button>
+  <button data-tab="exam"><span class="ic">🎓</span>Пробник</button>
+  <button data-tab="sheets"><span class="ic">📋</span>Шпаргалки</button>
+  <button data-tab="progress"><span class="ic">📈</span>Прогресс</button>
+</nav>
+
+<script src="data.js"></script>
+<script src="wasm_data.js"></script>
+<script src="sql-wasm.js"></script>
+<script>
+"use strict";
+const D = window.DEMO_DATA;
+const KEY = "demoexam09_progress_v1";
+const DEF = {
+  plan_done: [], theory_read: [],
+  quiz: { asked: 0, correct: 0, by_topic: {} },
+  sql_done: [], exam_checks: [], exam_attempts: [],
+  thresholds: { "3": 50, "4": 70, "5": 90 },
+  days_active: [], dark: false
+};
+let S = load();
+function load(){
+  let s = JSON.parse(JSON.stringify(DEF));
+  try { const o = JSON.parse(localStorage.getItem(KEY) || "null"); if(o && typeof o === "object") s = Object.assign(s, o); } catch(e){}
+  // Защита от неполного/старого JSON (например, при переносе прогресса)
+  for(const k of ["plan_done","theory_read","sql_done","exam_checks","exam_attempts","days_active"])
+    if(!Array.isArray(s[k])) s[k] = [];
+  if(!s.quiz || typeof s.quiz !== "object") s.quiz = {asked:0,correct:0,by_topic:{}};
+  if(!s.quiz.by_topic || typeof s.quiz.by_topic !== "object") s.quiz.by_topic = {};
+  if(typeof s.quiz.asked !== "number") s.quiz.asked = 0;
+  if(typeof s.quiz.correct !== "number") s.quiz.correct = 0;
+  if(!s.thresholds || typeof s.thresholds !== "object") s.thresholds = {"3":50,"4":70,"5":90};
+  for(const k of ["3","4","5"]) if(typeof s.thresholds[k] !== "number") s.thresholds[k] = {"3":50,"4":70,"5":90}[k];
+  return s;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function today(){ return new Date().toISOString().slice(0,10); }
+(function(){ if(!S.days_active.includes(today())){ S.days_active.push(today()); save(); } })();
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function el(id){ return document.getElementById(id); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ---------- навигация и тема ---------- */
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  document.querySelectorAll("main section").forEach(s=>s.classList.remove("active"));
+  el("tab-"+b.dataset.tab).classList.add("active");
+  window.scrollTo(0,0);
+  if(b.dataset.tab==="progress") renderProgress();
+});
+function applyTheme(){ document.body.classList.toggle("dark", !!S.dark); el("themeBtn").textContent = S.dark ? "☀️" : "🌙"; }
+el("themeBtn").onclick = ()=>{ S.dark=!S.dark; save(); applyTheme(); };
+applyTheme();
+
+/* ---------- ПЛАН ---------- */
+let planFilterWeek = 0;
+function renderPlan(){
+  const box = el("planList"); let html="";
+  const weeks = [...new Set(D.plan.map(p=>p.week))];
+  for(const w of weeks){
+    if(planFilterWeek && w!==planFilterWeek) continue;
+    const items = D.plan.filter(p=>p.week===w);
+    const doneW = items.filter(p=>S.plan_done.includes(p.id)).length;
+    html += `<details ${(!planFilterWeek && w===1)?"open":""}><summary><span>${esc(items[0].theme)}</span><span class="pill">${doneW}/5</span></summary><div class="body">`;
+    for(const p of items){
+      const ch = S.plan_done.includes(p.id) ? "checked" : "";
+      html += `<label class="chk"><input type="checkbox" data-plan="${p.id}" ${ch}><span><b>День ${p.n}. ${esc(p.title)}</b><br><span class="muted">${esc(p.task)} · ${p.minutes} мин</span></span></label>`;
+    }
+    html += `</div></details>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll("input[data-plan]").forEach(c=>c.onchange=()=>{
+    const id=c.dataset.plan;
+    if(c.checked){ if(!S.plan_done.includes(id)) S.plan_done.push(id); }
+    else S.plan_done = S.plan_done.filter(x=>x!==id);
+    save(); updatePlanInfo(); renderPlan();
+  });
+  updatePlanInfo();
+}
+function updatePlanInfo(){
+  const d = S.plan_done.length;
+  el("planInfo").textContent = `Выполнено ${d} из ${D.plan.length} занятий · ≈ ${(d*1.4).toFixed(0)} ч практики`;
+  el("planBar").style.width = (d/D.plan.length*100)+"%";
+}
+el("planThisWeek").onclick=()=>{
+  const done = S.plan_done.length;
+  planFilterWeek = planFilterWeek ? 0 : Math.min(12, Math.floor(done/5)+1);
+  el("planThisWeek").textContent = planFilterWeek ? "Показать все недели" : "Только текущая неделя";
+  renderPlan();
+};
+el("planReset").onclick=()=>{ if(confirm("Снять все галочки плана?")){ S.plan_done=[]; save(); renderPlan(); } };
+renderPlan();
+
+/* ---------- ТЕОРИЯ ---------- */
+function renderLessonSelect(){
+  el("lessonSel").innerHTML = D.lessons.map((l,i)=>`<option value="${i}">${S.theory_read.includes(l[0])?"✓ ":""}${esc(l[2])}</option>`).join("");
+}
+function showLesson(){
+  const i = +el("lessonSel").value; const l = D.lessons[i];
+  el("lessonMeta").textContent = `Тема: ${l[1]} · ~${l[3]} мин · урок ${i+1} из ${D.lessons.length}`;
+  el("lessonText").textContent = l[4].trim();
+  el("lessonRead").textContent = S.theory_read.includes(l[0]) ? "✓ Прочитано" : "Отметить прочитанным";
+}
+el("lessonSel").onchange = showLesson;
+el("lessonRead").onclick=()=>{
+  const l = D.lessons[+el("lessonSel").value];
+  if(!S.theory_read.includes(l[0])) S.theory_read.push(l[0]);
+  save(); renderLessonSelect(); el("lessonSel").value=+el("lessonSel").value; showLesson();
+};
+renderLessonSelect(); showLesson();
+
+/* ---------- ТЕСТЫ ---------- */
+let qQueue=[], qCur=null, qSession={asked:0,correct:0};
+(function(){
+  const topics=["Все темы",...new Set(D.quiz.map(q=>q.topic))];
+  el("quizTopic").innerHTML = topics.map(t=>`<option>${esc(t)}</option>`).join("");
+})();
+function startQuiz(n){
+  const topic=el("quizTopic").value;
+  let pool=D.quiz.filter(q=>topic==="Все темы"||q.topic===topic);
+  if(!pool.length) return;
+  qQueue = shuffle(pool.slice()).slice(0,n);
+  while(qQueue.length<n) qQueue.push(pool[Math.floor(Math.random()*pool.length)]);
+  qSession={asked:0,correct:0};
+  nextQ(true);
+}
+function nextQ(reset){
+  if(!reset && !qQueue.length){
+    qCur=null;
+    el("quizQ").textContent="Тест завершён! Запусти новый.";
+    el("quizOpts").innerHTML=""; el("quizAnswer").disabled=true; el("quizNext").disabled=true;
+    fb(`Результат: ${qSession.correct} из ${qSession.asked} (${Math.round(qSession.correct/Math.max(1,qSession.asked)*100)}%). Слабые темы смотри в «Прогресс».`, true);
+    return;
+  }
+  qCur=qQueue.shift();
+  el("quizQ").textContent=qCur.q;
+  el("quizOpts").innerHTML=qCur.opts.map((o,i)=>`<label class="opt"><input type="radio" name="qopt" value="${i}"><span>${String.fromCharCode(65+i)}. ${esc(o)}</span></label>`).join("");
+  el("quizAnswer").disabled=false; el("quizNext").disabled=true;
+  el("quizFb").style.display="none";
+  updateQuizScore();
+}
+function fb(t,ok){ const e=el("quizFb"); e.style.display="block"; e.className="feedback "+(ok?"ok":"bad"); e.textContent=t; }
+function updateQuizScore(){ el("quizScore").textContent=`Осталось ${qQueue.length+(qCur?1:0)} · верно ${qSession.correct}/${qSession.asked} · всего ${S.quiz.correct}/${S.quiz.asked}`; }
+el("quiz10").onclick=()=>startQuiz(10);
+el("quiz20").onclick=()=>startQuiz(20);
+el("quizAnswer").onclick=()=>{
+  if(!qCur) return;
+  const picked=document.querySelector('input[name=qopt]:checked');
+  if(!picked){ alert("Сначала выбери вариант"); return; }
+  const c=+picked.value, ok=c===qCur.ans;
+  qSession.asked++; qSession.correct+=ok?1:0;
+  S.quiz.asked++; S.quiz.correct+=ok?1:0;
+  const t=S.quiz.by_topic[qCur.topic]||(S.quiz.by_topic[qCur.topic]={asked:0,correct:0});
+  t.asked++; t.correct+=ok?1:0;
+  save();
+  document.querySelectorAll(".opt").forEach((l,i)=>{
+    l.querySelector("input").disabled=true;
+    if(i===qCur.ans) l.classList.add("ok");
+    else if(i===c) l.classList.add("bad");
+  });
+  fb((ok?"ВЕРНО ✓  ":"НЕВЕРНО ✗  ")+`Правильный ответ: ${String.fromCharCode(65+qCur.ans)}. ${qCur.opts[qCur.ans]}\n\n`+qCur.explain, ok);
+  el("quizAnswer").disabled=true; el("quizNext").disabled=false; updateQuizScore();
+};
+el("quizNext").onclick=()=>nextQ(false);
+
+/* ---------- SQL ---------- */
+let SQL=null;
+function b64bytes(b64){
+  const bin=atob(b64), out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+async function ensureSQL(){
+  if(SQL) return SQL;
+  el("sqlOut").textContent="Загружаю встроенный SQLite…";
+  SQL = await initSqlJs({ wasmBinary: b64bytes(window.SQL_WASM_B64) });
+  return SQL;
+}
+function normVal(v){
+  if(typeof v==="number") return Math.round(v*100)/100;
+  if(v==null) return "";
+  if(typeof v==="string") return v.trim();
+  return v;
+}
+function query(db, sql){
+  const r=db.exec(sql);
+  if(!r.length) return {cols:[],rows:[]};
+  const last=r[r.length-1];
+  return {cols:last.columns, rows:last.values.map(row=>row.map(normVal))};
+}
+function rowsEqual(a,b){
+  if(a.length!==b.length) return false;
+  for(let i=0;i<a.length;i++){
+    if(a[i].length!==b[i].length) return false;
+    for(let j=0;j<a[i].length;j++){
+      const x=a[i][j], y=b[i][j];
+      if(typeof x==="number" && typeof y==="number"){ if(Math.abs(x-y)>0.011) return false; }
+      else if(x!==y) return false;
+    }
+  }
+  return true;
+}
+function tableHTML(cols,rows){
+  if(!cols.length) return "<p class=muted>(запрос не вернул столбцы)</p>";
+  const n=Math.max(cols.length,...rows.map(r=>r.length));
+  const h=[...cols]; while(h.length<n) h.push("");
+  let s="<table><thead><tr>"+h.map(c=>`<th>${esc(c)}</th>`).join("")+"</tr></thead><tbody>";
+  for(const r of rows.slice(0,40)){ const v=[...r]; while(v.length<n) v.push(""); s+="<tr>"+v.map(c=>`<td>${esc(c)}</td>`).join("")+"</tr>"; }
+  s+="</tbody></table>";
+  if(rows.length>40) s+=`<p class=muted>… и ещё ${rows.length-40} строк</p>`;
+  return s;
+}
+function freshDb(){ const db=new SQL.Database(); db.run("PRAGMA foreign_keys=ON"); db.run(D.schema); return db; }
+function sqlOutHtml(t){ el("sqlOut").innerHTML=t; }
+(function(){
+  el("sqlSel").innerHTML=D.sql.map((t,i)=>`<option value="${i}">${S.sql_done.includes(t.id)?"✓ ":""}${esc(t.title)}</option>`).join("");
+})();
+function showTask(){
+  const t=D.sql[+el("sqlSel").value];
+  el("sqlTask").textContent=`[${t.level}] ${t.task}`;
+  el("sqlInput").value="";
+  sqlOutHtml("Результат проверки появится здесь.\n\nТаблицы: roles, users, categories, manufacturers, suppliers, units, products, order_statuses, pickup_points, orders, order_items.");
+}
+el("sqlSel").onchange=showTask;
+el("sqlClear").onclick=()=>el("sqlInput").value="";
+el("sqlHint").onclick=()=>sqlOutHtml("<b>ПОДСКАЗКА</b>\n\n"+esc(D.sql[+el("sqlSel").value].hint));
+el("sqlShow").onclick=()=>{ const t=D.sql[+el("sqlSel").value]; sqlOutHtml("<b>ЭТАЛОННЫЙ ОТВЕТ</b>\n\n"+esc(t.expected)+"\n\nРазбери его и напиши свой вариант заново."); };
+el("sqlSchema").onclick=()=>sqlOutHtml(esc(D.schema.split("INSERT INTO")[0].trim()));
+el("sqlCheck").onclick=async()=>{
+  const t=D.sql[+el("sqlSel").value], user=el("sqlInput").value.trim();
+  if(!user){ sqlOutHtml("Напиши SQL-запрос в поле выше."); return; }
+  el("sqlCheck").disabled=true;
+  try{
+    await ensureSQL();
+    let ref,dbUser,cols,actual,expected;
+    if(t.mode==="script"){
+      ref=freshDb(); ref.run(t.expected); expected=query(ref,t.verify).rows; ref.close();
+      dbUser=freshDb(); dbUser.run(user); const r=query(dbUser,t.verify); cols=r.cols; actual=r.rows; dbUser.close();
+    }else{
+      ref=freshDb(); expected=query(ref,t.expected).rows; ref.close();
+      dbUser=freshDb(); const r=query(dbUser,user); cols=r.cols; actual=r.rows; dbUser.close();
+    }
+    if(rowsEqual(actual,expected)){
+      sqlOutHtml("<b style='color:#7ddba5'>✓ ВЕРНО!</b> Запрос вернул эталонный результат."+tableHTML(cols,actual));
+      if(!S.sql_done.includes(t.id)){ S.sql_done.push(t.id); save();
+        const i=+el("sqlSel").value; el("sqlSel").options[i].text="✓ "+t.title; }
+    }else{
+      sqlOutHtml("<b style='color:#ff7b6b'>✗ ПОКА НЕВЕРНО</b> — результат отличается от эталонного.<h3>Твой результат</h3>"+tableHTML(cols,actual)+"<h3>Ожидаемый результат</h3>"+tableHTML(cols,expected)+"<p class=muted>Подсказка: "+esc(t.hint)+"</p>");
+    }
+  }catch(e){
+    sqlOutHtml("<b style='color:#ff7b6b'>ОШИБКА SQL</b>\n\n"+esc(e.message||String(e))+"\n\nПроверь названия таблиц/столбцов, кавычки и порядок предложений. Структуру БД можно посмотреть кнопкой «Структура БД».");
+  }finally{ el("sqlCheck").disabled=false; }
+};
+showTask();
+
+/* ---------- ПРОБНИК ---------- */
+let examItems=[];
+(function(){
+  let idx=0, html="";
+  for(const [title,items] of D.criteria){
+    html+=`<details ${idx===0?"open":""}><summary><span>${esc(title)}</span></summary><div class="body">`;
+    for(const [text,w] of items){
+      examItems.push({idx,text,w});
+      html+=`<label class="chk"><input type="checkbox" data-ex="${idx}" ${S.exam_checks.includes(idx)?"checked":""}><span>${esc(text)}</span><span class="pill">+${w}</span></label>`;
+      idx++;
+    }
+    html+="</div></details>";
+  }
+  el("examList").innerHTML=html;
+  el("examList").querySelectorAll("input[data-ex]").forEach(c=>c.onchange=()=>{
+    const i=+c.dataset.ex;
+    if(c.checked){ if(!S.exam_checks.includes(i)) S.exam_checks.push(i); }
+    else S.exam_checks=S.exam_checks.filter(x=>x!==i);
+    save(); updateExam();
+  });
+})();
+el("th3").value=S.thresholds["3"]; el("th4").value=S.thresholds["4"]; el("th5").value=S.thresholds["5"];
+["th3","th4","th5"].forEach(id=>el(id).onchange=()=>{
+  S.thresholds={"3":+el("th3").value||0,"4":+el("th4").value||0,"5":+el("th5").value||0};
+  save(); updateExam();
+});
+function examScore(){ return examItems.reduce((s,it)=>s+(S.exam_checks.includes(it.idx)?it.w:0),0); }
+function updateExam(){
+  const score=examScore(), pct=score/D.max_score*100, th=S.thresholds;
+  let g=2; for(const m of [3,4,5]) if(pct>=th[String(m)]) g=m;
+  const names={2:"2 (не сдано)",3:"3 (удовл.)",4:"4 (хор.)",5:"5 (отл.)"};
+  el("examScore").textContent=`${score} / ${D.max_score}`;
+  el("examGrade").textContent="Оценка: "+names[g]+` (${pct.toFixed(0)}%)`;
+  const n4=Math.max(0,Math.ceil(th["4"]/100*D.max_score)-score);
+  const n5=Math.max(0,Math.ceil(th["5"]/100*D.max_score)-score);
+  el("examNeed").textContent=`До «4»: ${n4} б. · До «5»: ${n5} б. Самые «жирные»: Задание 3 (25), Задание 4 (25), Задание 5 (25).`;
+}
+let tLeft=4*3600, tRunning=false, tStamp=0;
+function tick(){
+  if(!tRunning) return;
+  tLeft=Math.max(0,tLeft-(Date.now()-tStamp)/1000); tStamp=Date.now();
+  const h=Math.floor(tLeft/3600), m=Math.floor(tLeft%3600/60), s=Math.floor(tLeft%60);
+  el("examTimer").textContent=[h,m,s].map(x=>String(x).padStart(2,"0")).join(":");
+  if(tLeft<=0){ tRunning=false; alert("Время вышло — сохраняй и загружай файлы!"); return; }
+  setTimeout(tick,1000);
+}
+el("examStart").onclick=()=>{ if(tRunning){ tRunning=false; } else { tRunning=true; tStamp=Date.now(); tick(); } };
+el("examTimerReset").onclick=()=>{ tRunning=false; tLeft=4*3600; el("examTimer").textContent="04:00:00"; };
+el("examClear").onclick=()=>{ if(confirm("Снять все галочки пробника?")){ S.exam_checks=[]; save();
+  el("examList").querySelectorAll("input[data-ex]").forEach(c=>c.checked=false); updateExam(); } };
+el("examFinish").onclick=()=>{
+  const score=examScore(), pct=Math.round(score/D.max_score*1000)/10, th=S.thresholds;
+  let g=2; for(const m of [3,4,5]) if(pct>=th[String(m)]) g=m;
+  const weak=[];
+  let idx=0;
+  for(const [title,items] of D.criteria){
+    let got=0,full=0;
+    for(const [,w] of items){ full+=w; if(S.exam_checks.includes(idx)) got+=w; idx++; }
+    if(got<full) weak.push(`• ${title}: ${got}/${full}`);
+  }
+  S.exam_attempts.push({date:today(),score:score,max:D.max_score,percent:pct,grade:g,minutes:Math.round((4*3600-tLeft)/60)});
+  save();
+  alert(`${score} из ${D.max_score} баллов (${pct}%) → оценка «${g}».\n\nНедобранные критерии:\n`+(weak.slice(0,8).join("\n")||"все закрыты, отлично!"));
+  renderProgress();
+};
+updateExam();
+
+/* ---------- ШПАРГАЛКИ ---------- */
+(function(){ el("sheetSel").innerHTML=D.snippets.map((s,i)=>`<option value="${i}">${esc(s[0])}</option>`).join(""); })();
+function showSheet(){ const s=D.snippets[+el("sheetSel").value]; el("sheetTitle").textContent=s[0]; el("sheetCode").textContent=s[1].trim(); }
+el("sheetSel").onchange=showSheet;
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast("Скопировано"),()=>fallbackCopy(t)); }
+  else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0";
+  document.body.appendChild(a); a.focus(); a.select();
+  try{ document.execCommand("copy"); toast("Скопировано"); }catch(e){ alert("Не удалось скопировать. Выдели текст вручную."); }
+  document.body.removeChild(a);
+}
+let toastEl=null;
+function toast(msg){
+  if(!toastEl){ toastEl=document.createElement("div"); toastEl.style.cssText="position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:#1d2733;color:#fff;padding:9px 16px;border-radius:20px;z-index:99;font-size:13px"; document.body.appendChild(toastEl); }
+  toastEl.textContent=msg; toastEl.style.display="block";
+  clearTimeout(toastEl._t); toastEl._t=setTimeout(()=>toastEl.style.display="none",1600);
+}
+el("sheetCopy").onclick=()=>copyText(D.snippets[+el("sheetSel").value][1]);
+el("sheetCopyAll").onclick=()=>copyText(D.snippets.map(s=>`## ${s[0]}\n\n${s[1].trim()}`).join("\n\n---\n\n"));
+showSheet();
+
+/* ---------- ПРОГРЕСС ---------- */
+function renderProgress(){
+  const plan=S.plan_done.length, theory=S.theory_read.length, sql=S.sql_done.length;
+  const q=S.quiz, score=examScore();
+  const overall = plan/D.plan.length*40 + theory/D.lessons.length*15 + sql/D.sql.length*20
+                + (q.correct/Math.max(1,q.asked))*10 + score/D.max_score*15;
+  el("prOverall").textContent=overall.toFixed(0)+"%";
+  el("prBar").style.width=Math.min(100,overall)+"%";
+  el("prVerdict").textContent = overall<30 ? "Пока рано: пройди хотя бы 3 недели плана и первые 7 SQL-задач."
+    : overall<65 ? "База есть. Цель ближайших недель — Задания 3–5 (75 баллов из 100)."
+    : overall<85 ? "Хороший темп! Доводи пробники до 70% и выше — это четвёрка."
+    : "Отличная готовность. Осталось отточить тайминг и артефакты для «5».";
+  el("prStats").innerHTML=[
+    ["План",`${plan}/${D.plan.length} занятий`],["Теория",`${theory}/${D.lessons.length} уроков`],
+    ["SQL",`${sql}/${D.sql.length} задач`],["Тесты",`${q.correct}/${q.asked} верных`],
+    ["Пробник",`${score}/${D.max_score} б.`],["Дней в приложении",S.days_active.length]
+  ].map(([k,v])=>`<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join("");
+  const topics=Object.entries(S.quiz.by_topic).sort((a,b)=>a[1].correct/Math.max(1,a[1].asked)-b[1].correct/Math.max(1,b[1].asked));
+  el("prTopics").innerHTML=topics.length?topics.map(([t,st])=>{
+    const p=Math.round(st.correct/Math.max(1,st.asked)*100);
+    return `<div class="kpi"><span>${esc(t)}</span><b style="color:${p>=70?'var(--accent-d)':'var(--red)'}">${st.correct}/${st.asked} (${p}%)</b></div>`;
+  }).join(""):"<p class=muted>Пока ни одного ответа. Запусти тест во вкладке «Тесты».</p>";
+  el("prAttempts").innerHTML=S.exam_attempts.length?S.exam_attempts.slice(-10).reverse().map((a,i)=>
+    `<div class="kpi"><span>${a.date}</span><b>${a.score}/${a.max} б. · ${a.percent}% · «${a.grade}» · ${a.minutes} мин</b></div>`).join("")
+    :"<p class=muted>Пробников ещё нет.</p>";
+  el("prTips").textContent=[
+    "1. Открой «SQL-практику» и реши задания 1–7. Это фундамент Модуля 1 и списка товаров.",
+    "2. Прочитай уроки про БД, нормальные формы, разбор 5 заданий и баллы.",
+    "3. На компьютере запусти lab/example_app.py — посмотри, как устроены 5 заданий.",
+    "4. Каждый день отмечай занятие в «Плане» — прогресс сохраняется автоматически.",
+    "5. Раз в неделю проходи «Экзамен: 20 вопросов» и пробник с таймером.",
+    "6. Цель: ≥70% на «4», ≥90% на «5». Шкалу уточни у куратора."
+  ].join("\n");
+}
+el("prExport").onclick=()=>{ el("prJson").value=JSON.stringify(S); copyText(el("prJson").value); };
+el("prImport").onclick=()=>{
+  try{ const o=JSON.parse(el("prJson").value); if(!o||typeof o!=="object") throw 0;
+    S=Object.assign({},DEF,o); save(); alert("Прогресс загружен. Перезапусти приложение."); }
+  catch(e){ alert("Не похоже на JSON прогресса."); }
+};
+el("prReset").onclick=()=>{ if(confirm("Удалить весь прогресс? Отменить нельзя.")){ S=JSON.parse(JSON.stringify(DEF)); save(); alert("Готово. Перезапусти приложение."); } };
+renderProgress();
+</script>
+</body>
+</html>

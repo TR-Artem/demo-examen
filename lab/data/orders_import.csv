@@ -1,0 +1,4 @@
+order_key;order_date;login;product_name;size;quantity;unit_price
+IMP-1;today;afedorova;Кроссовки Nova;38;1;5290.00
+IMP-1;today;afedorova;Туфли Slim;37;2;6790.00
+IMP-2;today;dbelova;Ботинки Urban;42;1;8690.00
