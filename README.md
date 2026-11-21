@@ -20,9 +20,8 @@
 2. Двойной клик по **`run.bat`** → откроется тренажёр.
 3. Начни с **«План на 12 недель»** → **«Теория»** → **«SQL-практика»**.
 4. Готовое приложение: **`run_example.bat`** (или `cd lab` → `python example_app.py`).
-5. С телефона: **`DemoExam-09-02-07.apk`** или сайт
-   **https://alessstft.github.io/Demoexam/** (после включения Pages —
-   см. `GITHUB_PAGES.md`).
+5. С телефона: сайт **https://alessstft.github.io/Demoexam/** —
+   там две версии: «Веб-версия» и «Скачать APK».
 
 Ничего доустанавливать не нужно: `tkinter` и `sqlite3` входят в Python.
 
