@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Ошибка {{ code }} — ДЭ.Курс{% endblock %}
+
+{% block content %}
+<main class="wrap page">
+  <div class="card error-card">
+    <p class="eyebrow">Ошибка {{ code }}</p>
+    <h1>Такой страницы нет</h1>
+    <p class="muted">{{ message }}</p>
+    <a class="btn btn--primary" href="{{ url_for('index') }}">На главную</a>
+  </div>
+</main>
+{% endblock %}

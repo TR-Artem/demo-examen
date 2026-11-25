@@ -1,7 +1,11 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title ДЭ 09.02.07 - тренажёр
+if /I "%DEMOEXAM_COURSE%"=="programmer" (
+    title ДЭ 09.02.07-2-2027 - тренажёр «Программист»
+) else (
+    title ДЭ 09.02.07-3-2027 - тренажёр «Веб и мультимедиа»
+)
 
 where python >nul 2>nul
 if %errorlevel%==0 (

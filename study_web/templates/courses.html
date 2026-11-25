@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Мои курсы — ДЭ.Курс{% endblock %}
+
+{% block content %}
+<main class="wrap page">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Учебные курсы</p>
+      <h1>Выберите курс</h1>
+      <p class="muted">Материалы, тесты и практика для подготовки к демонстрационному экзамену.</p>
+    </div>
+  </div>
+
+  <div class="course-list">
+    {% for slug, course in courses.items() %}
+      <article class="course-row card">
+        <div>
+          <p class="course-row__code">{{ course.code }}</p>
+          <h2>{{ course.title }}</h2>
+          <p class="muted">{{ course.description }}</p>
+        </div>
+        <a class="btn btn--primary" href="{{ url_for('course', slug=slug) }}">Открыть курс</a>
+      </article>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

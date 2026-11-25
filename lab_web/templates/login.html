@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Вход — Корочки.есть{% endblock %}
+
+{% block content %}
+<section class="auth auth--narrow">
+  <div class="auth__intro">
+    <p class="eyebrow">Личный кабинет</p>
+    <h1>Вход в систему</h1>
+    <p>Введите логин и пароль, чтобы управлять заявками на обучение.</p>
+  </div>
+
+  <form method="post" class="card form" novalidate aria-label="Форма входа">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    {% if error %}
+      <div class="alert alert--error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="login">Логин</label>
+      <input id="login" name="login" value="{{ login_value }}"
+             required autocomplete="username" autofocus>
+    </div>
+
+    <div class="field">
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password"
+             required autocomplete="current-password">
+    </div>
+
+    <button class="btn btn--primary btn--block" type="submit">Войти</button>
+    <p class="form__footnote">
+      Еще не зарегистрированы? <a href="{{ url_for('register') }}">Регистрация</a>
+    </p>
+  </form>
+
+  <aside class="demo-hint">
+    <strong>Демо-доступ:</strong>
+    <span>пользователь <code>demo01</code> / <code>password123</code></span>
+    <span>администратор <code>Admin</code> / <code>KorokNET</code></span>
+  </aside>
+</section>
+{% endblock %}

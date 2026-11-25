@@ -2,15 +2,15 @@
 
 Репозиторий уже создан и всё залито:
 **https://github.com/alessstft/Demoexam** (ветка `main`).
-Осталось создать релиз и прикрепить APK.
+Осталось создать релиз и прикрепить офлайн-HTML (APK — архивная версия).
 
 ## Вариант 1. Через сайт GitHub (проще всего, без команд)
 
 1. Открой **https://github.com/alessstft/Demoexam/releases/new**
    (или на странице репозитория справа: **Releases → Draft a new release**).
-2. **Choose a tag** → впиши `v1.0.0` → нажми
-   **«Create new tag: v1.0.0 on publish»**.
-3. **Release title**: `v1.0.0 — ДЭ 09.02.07-2-2027: тренажёр + APK`
+2. **Choose a tag** → впиши `v2.0.0` → нажми
+   **«Create new tag: v2.0.0 on publish»**.
+3. **Release title**: `v2.0.0 — ДЭ 09.02.07-3-2027: веб-тренажёр + Flask-проект`
 4. **Describe this release** — вставь текст из файла `RELEASE_NOTES.md`
    (открой его в блокноте, скопируй всё и вставь).
 5. **Attach binaries** — перетащи или выбери два файла:
@@ -19,7 +19,7 @@
 6. Нажми **Publish release**.
 
 Готово: ссылка вида
-`https://github.com/alessstft/Demoexam/releases/tag/v1.0.0`
+`https://github.com/alessstft/Demoexam/releases/tag/v2.0.0`
 — её можно отправить себе в Telegram и открыть на телефоне.
 
 > GitHub сам добавит к релизу архивы исходников (`Source code.zip`).
@@ -30,12 +30,12 @@
 В папке проекта:
 
 ```bat
-git tag -a v1.0.0 -m "ДЭ 09.02.07-2-2027: тренажёр, образец, APK"
-git push origin v1.0.0
+git tag -a v2.0.0 -m "ДЭ 09.02.07-3-2027: веб-тренажёр, Flask-проект, офлайн HTML"
+git push origin v2.0.0
 ```
 
 Потом открой `https://github.com/alessstft/Demoexam/releases/new`,
-выбери существующий тег `v1.0.0`, заполни заголовок/описание и прикрепи APK.
+выбери существующий тег `v2.0.0`, заполни заголовок/описание и прикрепи DemoExam-mobile.html и DemoExam-mobile-programmer.html.
 
 Проверить теги:
 
@@ -55,13 +55,13 @@ gh auth login
 Создать релиз (из папки проекта):
 
 ```bat
-gh release create v1.0.0 "DemoExam-09-02-07.apk" "DemoExam-mobile.html" ^
-  --title "v1.0.0 — ДЭ 09.02.07-2-2027: тренажёр + APK" ^
+gh release create v2.0.0 "DemoExam-mobile.html" "DemoExam-mobile-programmer.html" ^
+  --title "v2.0.0 — ДЭ 09.02.07-3-2027: веб-тренажёр + Flask-проект" ^
   --notes-file RELEASE_NOTES.md ^
   --target main
 ```
 
-`gh` создаст тег `v1.0.0` от `main`, загрузит файлы и опубликует релиз.
+`gh` создаст тег `v2.0.0` от `main`, загрузит файлы и опубликует релиз.
 
 ## Как обновить релиз
 
@@ -79,7 +79,7 @@ gh release create v1.0.0 "DemoExam-09-02-07.apk" "DemoExam-mobile.html" ^
 и `gh` — да, но Git обычно использует сохранённые учётные данные
 (Git Credential Manager) или `gh auth login`.
 
-**Какой тег выбрать?** `v1.0.0` — первый релиз. Дальше `v1.0.1` для
+**Какой тег выбрать?** `v2.0.0` — первый релиз. Дальше `v2.0.1` для
 исправлений и `v1.1.0` для новых возможностей.
 
 **Можно ли прикрепить ZIP?** Да, но лучше прикреплять APK отдельно:

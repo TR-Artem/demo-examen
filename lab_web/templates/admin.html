@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель — Корочки.есть{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Модуль 3 · администрирование</p>
+    <h1>Все заявки</h1>
+    <p class="muted">Фильтр, поиск, пагинация и смена статусов.</p>
+  </div>
+  <a class="btn btn--ghost" href="{{ url_for('dashboard') }}">Мои заявки</a>
+</section>
+
+<section class="stats" aria-label="Сводка">
+  <div class="stat card">
+    <span class="stat__label">Найдено заявок</span>
+    <strong class="stat__value">{{ total }}</strong>
+  </div>
+  {% for name, count in stats.items() %}
+    <div class="stat card">
+      <span class="stat__label">{{ name }}</span>
+      <strong class="stat__value">{{ count }}</strong>
+    </div>
+  {% endfor %}
+  <div class="stat card">
+    <span class="stat__label">Выручка завершённых</span>
+    <strong class="stat__value">{{ revenue|money }}</strong>
+  </div>
+</section>
+
+<form method="get" class="filters card" role="search" aria-label="Фильтр заявок">
+  <div class="field field--inline">
+    <label for="status">Статус</label>
+    <select id="status" name="status">
+      <option value="">Все статусы</option>
+      {% for sid, name in statuses.items() %}
+        <option value="{{ sid }}" {% if status_id == sid %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field field--grow">
+    <label for="q">Поиск по ФИО, телефону или курсу</label>
+    <input id="q" name="q" value="{{ query }}" placeholder="Например: Иванов или Python">
+  </div>
+  <div class="filters__actions">
+    <button class="btn btn--primary" type="submit">Применить</button>
+    <a class="btn btn--ghost" href="{{ url_for('admin') }}">Сбросить</a>
+  </div>
+</form>
+
+{% if not applications %}
+  <div class="empty-state card">
+    <h2>Заявок не найдено</h2>
+    <p>Измените фильтр или сбросьте поиск.</p>
+    <a class="btn btn--ghost" href="{{ url_for('admin') }}">Сбросить фильтры</a>
+  </div>
+{% else %}
+  <div class="table-wrap card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">№</th>
+          <th scope="col">Клиент</th>
+          <th scope="col">Курс</th>
+          <th scope="col">Дата</th>
+          <th scope="col">Оплата</th>
+          <th scope="col">Статус</th>
+          <th scope="col">Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for application in applications %}
+          <tr>
+            <td data-label="№">{{ application.application_id }}</td>
+            <td data-label="Клиент">
+              <strong>{{ application.user_full_name }}</strong>
+              <span class="muted">{{ application.user_phone }}</span>
+            </td>
+            <td data-label="Курс">{{ application.course_title }}</td>
+            <td data-label="Дата">{{ application.start_date|date_ru }}</td>
+            <td data-label="Оплата">{{ application.payment_label }}</td>
+            <td data-label="Статус">
+              <span class="badge {{ application.status_name|badge }}">{{ application.status_name }}</span>
+              {% if application.cancel_reason %}
+                <span class="cancel-reason">{{ application.cancel_reason }}</span>
+              {% endif %}
+            </td>
+            <td data-label="Действие">
+              <form method="post" class="status-form"
+                    action="{{ url_for('admin_status', application_id=application.application_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="back_status" value="{{ status_id or '' }}">
+                <input type="hidden" name="back_q" value="{{ query }}">
+                <input type="hidden" name="back_page" value="{{ page }}">
+                <select name="status_id" aria-label="Новый статус заявки {{ application.application_id }}">
+                  {% for sid, name in statuses.items() %}
+                    <option value="{{ sid }}" {% if application.status_id == sid %}selected{% endif %}>{{ name }}</option>
+                  {% endfor %}
+                </select>
+                <input name="cancel_reason" value="{{ application.cancel_reason or '' }}"
+                       placeholder="Причина отмены (доп.)" aria-label="Причина отмены">
+                <button class="btn btn--small btn--primary" type="submit">Сохранить</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pagination" aria-label="Страницы">
+    {% if page > 1 %}
+      <a class="btn btn--ghost btn--small"
+         href="{{ url_for('admin', page=page-1, status=status_id or '', q=query) }}">← Назад</a>
+    {% endif %}
+    <span>Страница {{ page }} из {{ pages }} · всего {{ total }}</span>
+    {% if page < pages %}
+      <a class="btn btn--ghost btn--small"
+         href="{{ url_for('admin', page=page+1, status=status_id or '', q=query) }}">Вперёд →</a>
+    {% endif %}
+  </nav>
+{% endif %}
+{% endblock %}

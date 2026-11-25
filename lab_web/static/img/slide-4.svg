@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Python для анализа данных">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b45309"/>
+      <stop offset="1" stop-color="#431407"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#bg4)"/>
+  <g opacity=".2" fill="#fde68a">
+    <rect x="40" y="40" width="560" height="320" rx="24"/>
+  </g>
+  <text x="430" y="340" font-family="system-ui, sans-serif" font-size="240" font-weight="900" fill="#ffffff" opacity=".08">04</text>
+  <g fill="#fffbeb" font-family="system-ui, sans-serif">
+    <text x="48" y="84" font-size="15" letter-spacing="3" opacity=".8">КУРС 04</text>
+    <text x="48" y="150" font-size="46" font-weight="800">Python</text>
+    <text x="48" y="204" font-size="46" font-weight="800">для анализа данных</text>
+    <text x="48" y="262" font-size="18" opacity=".85">pandas · визуализация · отчёты</text>
+  </g>
+</svg>

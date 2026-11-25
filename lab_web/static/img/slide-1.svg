@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Основы алгоритмизации и программирования">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#bg1)"/>
+  <g opacity=".18" stroke="#93c5fd" stroke-width="2">
+    <path d="M0 320h640M0 240h640M0 160h640M0 80h640"/>
+    <path d="M80 0v400M200 0v400M320 0v400M440 0v400M560 0v400"/>
+  </g>
+  <text x="430" y="340" font-family="system-ui, sans-serif" font-size="240" font-weight="900" fill="#ffffff" opacity=".08">01</text>
+  <g fill="#dbeafe" font-family="system-ui, sans-serif">
+    <text x="48" y="84" font-size="15" letter-spacing="3" opacity=".8">КУРС 01</text>
+    <text x="48" y="150" font-size="42" font-weight="800">Основы</text>
+    <text x="48" y="198" font-size="42" font-weight="800">алгоритмизации</text>
+    <text x="48" y="246" font-size="42" font-weight="800">и программирования</text>
+    <text x="48" y="300" font-size="18" opacity=".85">Логика · блок-схемы · первые программы</text>
+  </g>
+</svg>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Мои заявки — Корочки.есть{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Личный кабинет</p>
+    <h1>Мои заявки</h1>
+    <p class="muted">{{ current_user.full_name }} · {{ current_user.login }}</p>
+  </div>
+  <a class="btn btn--primary" href="{{ url_for('application_new') }}">Новая заявка</a>
+</section>
+
+{% if not applications %}
+  <div class="empty-state card">
+    <h2>Заявок пока нет</h2>
+    <p>Создайте первую заявку — это займёт пару минут.</p>
+    <a class="btn btn--primary" href="{{ url_for('application_new') }}">Создать заявку</a>
+  </div>
+{% else %}
+  <div class="application-list">
+    {% for application in applications %}
+      <article class="application-card card reveal">
+        <header class="application-card__head">
+          <div>
+            <h2>{{ application.course_title }}</h2>
+            <p class="muted">Заявка №{{ application.application_id }} от {{ application.created_at|date_ru }}</p>
+          </div>
+          <span class="badge {{ application.status_name|badge }}">{{ application.status_name }}</span>
+        </header>
+
+        <dl class="details">
+          <div><dt>Дата начала</dt><dd>{{ application.start_date|date_ru }}</dd></div>
+          <div><dt>Оплата</dt><dd>{{ application.payment_label }}</dd></div>
+          <div><dt>Стоимость</dt><dd>{{ application.course_price|money }}</dd></div>
+        </dl>
+
+        {% if application.cancel_reason %}
+          <div class="alert alert--error">
+            <strong>Причина отмены:</strong> {{ application.cancel_reason }}
+          </div>
+        {% endif %}
+
+        {% if application.review_rating %}
+          <p class="review-done">
+            Ваша оценка: <strong>{{ application.review_rating }} / 5</strong>
+          </p>
+        {% elif application.can_review %}
+          <form method="post" class="review-form"
+                action="{{ url_for('application_review', application_id=application.application_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <h3>Оставьте отзыв о курсе</h3>
+            <div class="review-form__row">
+              <div class="field field--inline">
+                <label for="rating-{{ application.application_id }}">Оценка</label>
+                <select id="rating-{{ application.application_id }}" name="rating" required>
+                  <option value="5">5 — отлично</option>
+                  <option value="4">4 — хорошо</option>
+                  <option value="3">3 — нормально</option>
+                  <option value="2">2 — слабо</option>
+                  <option value="1">1 — плохо</option>
+                </select>
+              </div>
+              <div class="field field--grow">
+                <label for="text-{{ application.application_id }}">Комментарий</label>
+                <textarea id="text-{{ application.application_id }}" name="review_text"
+                          rows="2" placeholder="Что понравилось, что улучшить" required></textarea>
+              </div>
+              <button class="btn btn--primary" type="submit">Отправить</button>
+            </div>
+          </form>
+        {% elif application.status_id == 3 %}
+          <p class="muted">Курс завершён. Спасибо, что учились с нами!</p>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ step.title }} — {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="course-layout">
+  <aside class="syllabus">
+    <div class="syllabus__head">
+      <a class="syllabus__back" href="{{ url_for('courses') }}">← Мои курсы</a>
+      <h2>{{ course.title }}</h2>
+      <div class="progress"><i style="width: {{ (done_steps / total_steps * 100)|round|int if total_steps else 0 }}%"></i></div>
+      <small>{{ done_steps }} из {{ total_steps }} шагов</small>
+    </div>
+    <nav class="syllabus__nav">
+      {% for m in modules %}
+        {% set m_index = loop.index %}
+        <div class="syllabus__module">Модуль {{ m_index }}. {{ m.title }}</div>
+        {% for s in m.steps %}
+          {% set s_index = loop.index %}
+          <a class="syllabus__step {{ 'is-current' if m_index == module_no and s_index == step_no else '' }} {{ 'is-done' if s.done else '' }}"
+             href="{{ url_for('step', slug=slug, module_no=m_index, step_no=s_index) }}">
+            <span class="syllabus__dot">{{ '✓' if s.done else s_index }}</span>
+            <span>{{ s.title }}</span>
+          </a>
+        {% endfor %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <main class="lesson-wrap">
+    <article class="lesson">
+      <p class="lesson__kicker">Шаг {{ step_no }} из {{ module.steps|length }} · {{ module.title }}</p>
+      <h1>{{ step.title }}</h1>
+      {% if done %}<span class="badge-done">Шаг зачтён</span>{% endif %}
+
+      {% if step.type == 'theory' %}
+        <div class="theory">{{ step.content }}</div>
+        <form method="post" class="step-actions">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn--primary" type="submit">Понятно, дальше</button>
+        </form>
+
+      {% elif step.type in ('quiz', 'test') %}
+        <form method="post" class="quiz">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          {% for question in step.questions %}
+            {% set qi = loop.index0 %}
+            <fieldset class="question">
+              <legend>{{ loop.index }}. {{ question.q }}</legend>
+              {% for option in question.opts %}
+                <label class="option">
+                  <input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}"
+                         {% if result and result.answers[qi] == loop.index0 %}checked{% endif %}>
+                  <span>{{ option }}</span>
+                </label>
+              {% endfor %}
+              {% if result %}
+                {% set detail = result.details[qi] %}
+                <div class="answer {{ 'answer--ok' if detail.correct else 'answer--bad' }}">
+                  <strong>{{ 'Верно' if detail.correct else 'Неверно' }}.</strong>
+                  Правильный ответ: {{ question.opts[question.ans] }}.<br>
+                  {{ question.explain }}
+                </div>
+              {% endif %}
+            </fieldset>
+          {% endfor %}
+          <button class="btn btn--primary" type="submit">Проверить</button>
+        </form>
+
+        {% if result %}
+          <div class="result {{ 'result--ok' if result.passed else 'result--bad' }}">
+            <strong>{{ result.score }} из {{ result.total }} ({{ result.percent }}%)</strong>
+            {% if result.passed %}
+              <span>Шаг зачтён. Порог: {{ result.threshold }}%.</span>
+              <a class="btn btn--primary btn--small" href="{{ next_url }}">Далее</a>
+            {% else %}
+              <span>Нужно не меньше {{ result.threshold }}%. Повторите и попробуйте ещё раз.</span>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      {% elif step.type == 'sql' %}
+        {% for task in step.tasks %}
+          <article class="task">
+            <div class="task__head">
+              <h2>{{ task.title }}</h2>
+              {% if task.id in sql_done %}<span class="badge-done">Решено</span>{% endif %}
+            </div>
+            <p>{{ task.task }}</p>
+            <p class="hint">Подсказка: {{ task.hint }}</p>
+            <form method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <textarea name="user_sql" rows="6" spellcheck="false" placeholder="SELECT ..."></textarea>
+              <button class="btn btn--primary btn--small" type="submit">Проверить</button>
+            </form>
+            {% if sql_result and sql_result.task_id == task.id %}
+              {% if sql_result.ok %}
+                <div class="answer answer--ok">Верно! Запрос возвращает нужный результат.</div>
+              {% else %}
+                <div class="answer answer--bad">{{ sql_result.error or 'Результат отличается от ожидаемого.' }}</div>
+              {% endif %}
+            {% endif %}
+          </article>
+        {% endfor %}
+      {% endif %}
+
+      <div class="lesson-nav">
+        {% if prev_url %}<a class="btn btn--ghost" href="{{ prev_url }}">← Назад</a>{% endif %}
+        <a class="btn btn--ghost" href="{{ url_for('course', slug=slug) }}">К содержанию</a>
+        {% if next_url and (step.type == 'theory' or done) %}
+          <a class="btn btn--primary" href="{{ next_url }}">Далее →</a>
+        {% endif %}
+      </div>
+    </article>
+  </main>
+</div>
+{% endblock %}

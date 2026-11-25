@@ -1,82 +1,69 @@
-# ER-диаграмма «Чудо Обувь» (8 таблиц)
+# ER-диаграмма «Корочки.есть» (6 таблиц)
 
-Скопируй код ниже в **mermaid.live** или в **draw.io**:
-`Extras → Edit Diagram → вставить Mermaid → Apply`, затем
-`File → Export as → PDF`.
+Скопируй код в **mermaid.live** или в **draw.io**
+(`Extras → Edit Diagram → вставить Mermaid → Apply`),
+затем `File → Export as → PDF`.
 
 ```mermaid
 erDiagram
     ROLES ||--o{ USERS : "роль"
-    CATEGORIES ||--o{ PRODUCTS : "категория"
-    PRODUCTS ||--o{ PRODUCT_ITEMS : "позиции"
-    SIZES ||--o{ PRODUCT_ITEMS : "размер"
-    USERS ||--o{ ORDERS : "оформляет"
-    ORDERS ||--o{ ORDER_ITEMS : "содержит"
-    PRODUCT_ITEMS ||--o{ ORDER_ITEMS : "заказано"
+    USERS ||--o{ APPLICATIONS : "создаёт"
+    COURSES ||--o{ APPLICATIONS : "выбран"
+    APPLICATION_STATUSES ||--o{ APPLICATIONS : "статус"
+    APPLICATIONS ||--o| REVIEWS : "отзыв"
+    USERS ||--o{ REVIEWS : "пишет"
 
     ROLES {
         int role_id PK
         string role_name
     }
-    CATEGORIES {
-        int category_id PK
-        string category_name
-    }
-    SIZES {
-        int size_id PK
-        real size_value
-    }
     USERS {
         int user_id PK
-        string last_name
-        string first_name
-        string middle_name
-        string login
+        string login UK
+        string password_hash
+        string full_name
+        string phone
+        string email UK
         int role_id FK
+        string created_at
     }
-    PRODUCTS {
-        int product_id PK
-        int category_id FK
-        string subcategory
-        string name
-        string manufacturer
+    COURSES {
+        int course_id PK
+        string title
         string description
-        string composition
-        string image_path
+        int duration_hours
         real price
+        string image
     }
-    PRODUCT_ITEMS {
-        int item_id PK
-        int product_id FK
-        int size_id FK
-        int quantity
+    APPLICATION_STATUSES {
+        int status_id PK
+        string status_name
     }
-    ORDERS {
-        int order_id PK
-        date order_date
+    APPLICATIONS {
+        int application_id PK
         int user_id FK
+        int course_id FK
+        string start_date
+        string payment_method
+        int status_id FK
+        string cancel_reason
+        string created_at
     }
-    ORDER_ITEMS {
-        int order_item_id PK
-        int order_id FK
-        int item_id FK
-        int quantity
-        real unit_price
+    REVIEWS {
+        int review_id PK
+        int application_id FK "UNIQUE"
+        int user_id FK
+        int rating
+        string review_text
+        string created_at
     }
 ```
 
-## Чек-лист перед экспортом
+## Что проверить на защите
 
-- [ ] все 8 таблиц;
-- [ ] атрибуты;
-- [ ] PK и FK;
-- [ ] связи 1:M;
-- [ ] согласованные имена;
-- [ ] экспорт **в PDF** (не PNG);
-- [ ] проверить, что текст читается при 100% масштабе.
-
-## Вариант без Mermaid
-
-В draw.io: ` Arrange → Insert → From Text` не нужен — просто нарисуй 8
-прямоугольников, подпиши поля, соедини линиями и подпиши связи «1» и «M».
-Главное — чтобы эксперт увидел таблицы, атрибуты, ключи и связи.
+- 6 таблиц, 3НФ;
+- PK/FK, `UNIQUE` на `login`, `email`, `reviews.application_id`;
+- `CHECK` на оплату и рейтинг;
+- кардинальности `1` и `M`;
+- подписи связей;
+- PDF/PNG приложен к README.

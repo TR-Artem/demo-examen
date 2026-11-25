@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }} — {{ course.title }}{% endblock %}
+
+{% block content %}
+<main class="wrap page">
+  <p class="crumbs">
+    <a href="{{ url_for('courses') }}">Мои курсы</a> /
+    <a href="{{ url_for('course', slug=slug) }}">{{ course.title }}</a> /
+    Модуль {{ module_no }}
+  </p>
+  <div class="page-head">
+    <p class="eyebrow">Модуль {{ module_no }}</p>
+    <h1>{{ module.title }}</h1>
+  </div>
+
+  <div class="step-list">
+    {% for step in module.steps %}
+      {% set done = step.done %}
+      <a class="step-row card {{ 'is-done' if done else '' }}"
+         href="{{ url_for('step', slug=slug, module_no=module_no, step_no=loop.index) }}">
+        <span class="step-row__num">{{ loop.index }}</span>
+        <span class="step-row__body">
+          <strong>{{ step.title }}</strong>
+          <small>
+            {% if step.type == 'theory' %}теория
+            {% elif step.type == 'quiz' %}практика
+            {% elif step.type == 'sql' %}SQL-практика
+            {% else %}тест по модулю{% endif %}
+          </small>
+        </span>
+        <span class="step-row__status">{{ '✓' if done else '→' }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

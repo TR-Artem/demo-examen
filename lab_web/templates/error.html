@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Ошибка {{ code }} — Корочки.есть{% endblock %}
+
+{% block content %}
+<section class="error-page card">
+  <p class="error-page__code">{{ code }}</p>
+  <h1>Что-то пошло не так</h1>
+  <p>{{ message }}</p>
+  <div class="hero__actions">
+    <a class="btn btn--primary" href="{{ url_for('index') }}">На главную</a>
+    {% if current_user %}
+      <a class="btn btn--ghost" href="{{ url_for('dashboard') }}">Мои заявки</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

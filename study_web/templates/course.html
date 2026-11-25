@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} — ДЭ.Курс{% endblock %}
+
+{% block content %}
+<main class="wrap page">
+  <div class="page-head">
+    <p class="eyebrow">{{ course.code }}</p>
+    <h1>{{ course.title }}</h1>
+    <p class="muted">{{ course.description }}</p>
+  </div>
+
+  <div class="module-list">
+    {% for module in modules %}
+      {% set percent = (module.done / module.total * 100)|round|int if module.total else 0 %}
+      <article class="module-card card">
+        <div class="module-card__head">
+          <span class="module-card__num">{{ loop.index }}</span>
+          <div>
+            <h2>{{ module.title }}</h2>
+            <p class="muted">{{ module.done }} из {{ module.total }} шагов · {{ percent }}%</p>
+          </div>
+        </div>
+        <div class="progress"><i style="width: {{ percent }}%"></i></div>
+        <a class="btn btn--primary" href="{{ url_for('module', slug=slug, module_no=loop.index) }}">Открыть модуль</a>
+      </article>
+    {% endfor %}
+  </div>
+
+  <p class="course-extra">
+    <a href="{{ url_for('course_content', slug=slug) }}" target="_blank" rel="noopener">
+      Открыть полный офлайн-тренажёр
+    </a>
+  </p>
+</main>
+{% endblock %}

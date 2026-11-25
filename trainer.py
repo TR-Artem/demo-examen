@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Тренажёр подготовки к демонстрационному экзамену
-09.02.07 «Информационные системы и программирование», квалификация «Программист»
-Проект КИМ 09.02.07-2-2027, ГИА, ПРОФИЛЬНЫЙ УРОВЕНЬ (100 баллов, 4 часа).
+09.02.07 «Информационные системы и программирование»,
+квалификация «Разработчик веб и мультимедийных приложений».
+База: КОД 09.02.07-3-2026, ГИА, ПРОФИЛЬНЫЙ УРОВЕНЬ (100 баллов, 4 часа).
 Содержание 2027 подключается из course2027.py в конце файла.
-Стек: Python + SQLite.
+Стек: Python + Flask + SQLite + HTML/CSS/JavaScript.
 
 Используется ТОЛЬКО стандартная библиотека Python 3.10+.
 Запуск:  python trainer.py     (или двойной клик по run.bat)
@@ -12,22 +13,28 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 import sqlite3
+import sys
 import time
 import tkinter as tk
 from datetime import date
 from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
+import courses
+
 # ---------------------------------------------------------------------------
 # Константы
 # ---------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent
-STATE_FILE = ROOT / "progress.json"
-MAX_SCORE = 75
+COURSE_KEY = courses.current_key()
+STATE_FILE = ROOT / f"progress_{COURSE_KEY}.json"
+MAX_SCORE = 100
 EXAM_SECONDS = 4 * 60 * 60
-TITLE = "ДЭ 09.02.07-2-2027 «Программист» — тренажёр (ПУ)"
+TITLE = ("ДЭ 09.02.07-3-2027 «Разработчик веб и мультимедийных "
+         "приложений» — тренажёр (ПУ)")
 
 ACCENT = "#2E8B57"          # цвет из задания: фон строки при скидке > 15 %
 ACCENT_DARK = "#1f6a41"
@@ -49,8 +56,9 @@ DEFAULT_STATE = {
 }
 
 # ---------------------------------------------------------------------------
-# База данных для SQL-практики (в памяти). Предметная область: продажа обуви.
-# Схема приведена к 3НФ, есть первичные и внешние ключи.
+# Резервная база для SQL-практики (в памяти). Основная схема и задания
+# подключаются из course2027.py в конце файла: портал онлайн-курсов
+# «Корочки.есть» (6 таблиц, 3НФ).
 # ---------------------------------------------------------------------------
 SCHEMA_SQL = """
 CREATE TABLE roles (
@@ -1261,12 +1269,27 @@ class Trainer(tk.Tk):
 
         header = ttk.Frame(self, padding=(14, 10))
         header.pack(fill="x")
-        ttk.Label(header, text="ДЭ 09.02.07-2-2027 «Программист» · профильный уровень · 100 баллов",
-                  font=("Segoe UI", 14, "bold"), foreground=ACCENT_DARK).pack(side="left")
-        ttk.Label(header, text="Python + SQLite · 5 заданий · цель: 5",
-                  font=("Segoe UI", 10), foreground=MUTED).pack(side="left", padx=14)
-        ttk.Button(header, text="Открыть папку с материалами",
+
+        head_left = ttk.Frame(header)
+        head_left.pack(side="left", fill="x", expand=True)
+        ttk.Label(head_left, text=EXAM_TITLE,
+                  font=("Segoe UI", 13, "bold"), foreground=ACCENT_DARK).pack(anchor="w")
+        ttk.Label(head_left, text=COURSE_SUBTITLE + " · 100 баллов",
+                  font=("Segoe UI", 10), foreground=MUTED).pack(anchor="w")
+
+        head_right = ttk.Frame(header)
+        head_right.pack(side="right")
+        ttk.Button(head_right, text="Открыть папку с материалами",
                    command=self.open_folder).pack(side="right")
+        self.course_var = tk.StringVar(
+            value=f"{COURSE_META['title']} — {COURSE_META['code']}")
+        self.course_box = ttk.Combobox(
+            head_right, textvariable=self.course_var,
+            values=courses.labels(), state="readonly", width=34)
+        self.course_box.pack(side="right", padx=(0, 8))
+        self.course_box.bind("<<ComboboxSelected>>", self.switch_course)
+        ttk.Label(head_right, text="Курс:", font=("Segoe UI", 10, "bold")).pack(
+            side="right", padx=(0, 6))
 
         self.nb = ttk.Notebook(self)
         self.nb.pack(fill="both", expand=True, padx=10, pady=(0, 10))
@@ -1300,11 +1323,23 @@ class Trainer(tk.Tk):
 
     # -- helpers ------------------------------------------------------------
     def open_folder(self):
-        import os
         try:
             os.startfile(str(ROOT))  # type: ignore[attr-defined]  (Windows)
         except Exception:
             messagebox.showinfo("Папка", str(ROOT))
+
+    def switch_course(self, _event=None):
+        key = courses.key_by_label(self.course_var.get())
+        if key == COURSE_ID:
+            return
+        os.environ["DEMOEXAM_COURSE"] = key
+        try:
+            os.execv(sys.executable, [sys.executable, str(Path(__file__).resolve())])
+        except OSError as err:
+            messagebox.showerror(
+                "Не удалось переключить курс",
+                f"Закройте тренажёр и запустите снова с параметром "
+                f"DEMOEXAM_COURSE={key}.\n\n{err}")
 
     def on_close(self):
         save_state(self.state)
@@ -1617,8 +1652,8 @@ class Trainer(tk.Tk):
         self.sql_task.config(text=t["task"])
         self.sql_input.delete("1.0", "end")
         self.sql_out("Результат проверки появится здесь.\n"
-                     "База: roles, users, categories, manufacturers, suppliers, units,\n"
-                     "products, order_statuses, pickup_points, orders, order_items.")
+                     "База «Корочки.есть»: roles, users, courses,\n"
+                     "application_statuses, applications, reviews.")
 
     def show_schema(self):
         self.sql_out(SCHEMA_SQL.split("INSERT INTO")[0].strip())
@@ -1739,8 +1774,8 @@ class Trainer(tk.Tk):
         self.exam_vars = {}
         self.exam_items = []
         ttk.Label(inner, text="Отметь всё, что реально сделано и лежит в репозитории. "
-                  "Веса галочек повторяют критерии проекта КИМ 09.02.07-2-2027 "
-                  "(5 заданий, 100 баллов).",
+                  "Веса галочек повторяют критерии КОД 09.02.07-3-2026 "
+                  "(3 модуля + вариативная часть, 100 баллов).",
                   wraplength=900, foreground=MUTED).pack(anchor="w", padx=12, pady=8)
         idx = 0
         for crit_title, items in CRITERIA:
@@ -1913,10 +1948,12 @@ class Trainer(tk.Tk):
         messagebox.showinfo("Готово", "Код скопирован в буфер обмена (Ctrl+V).")
 
     def save_sheets(self):
-        out = ["# Шпаргалки к ДЭ 09.02.07-2-2027 «Программист»\n",
-               "Стек: Python + SQLite. Сгенерировано тренажёром.\n"]
+        out = ["# Шпаргалки к ДЭ 09.02.07-3-2027 "
+               "«Разработчик веб и мультимедийных приложений»\n",
+               "Стек: Python + Flask + SQLite + HTML/CSS/JS. "
+               "Сгенерировано тренажёром.\n"]
         for title, code in SNIPPETS:
-            out.append(f"\n## {title}\n\n```python\n{code.strip()}\n```\n")
+            out.append(f"\n## {title}\n\n```text\n{code.strip()}\n```\n")
         path = ROOT / "Шпаргалки_всё.md"
         path.write_text("\n".join(out), encoding="utf-8")
         messagebox.showinfo("Сохранено", f"Файл: {path}")
@@ -1995,7 +2032,7 @@ class Trainer(tk.Tk):
         tips = [
             "1. Открой «SQL-практику» и реши задания 1–7. Это фундамент Модуля 1 и списка товаров.",
             "2. Прочитай уроки 04, 05, 12, 13 (БД, нормальные формы, разбор модулей, баллы).",
-            "3. Открой папку lab/: запусти example_app.py, посмотри, как устроены 5 заданий.",
+            "3. Открой папку lab_web/: запусти app.py, пройди регистрацию, заявку и админку.",
             "4. Каждый день отмечай занятие в «Плане» — прогресс сохраняется автоматически.",
             "5. Раз в неделю проходи «Экзамен: 20 вопросов» и один пробник с таймером.",
         ]
@@ -2014,22 +2051,31 @@ class Trainer(tk.Tk):
 
 
 # ---------------------------------------------------------------------------
-# Содержание 2027 года подключается последним и заменяет данные 2026 года.
-# Все методы ниже используют эти глобальные имена во время выполнения,
+# Содержание подключается последним и заменяет резервные данные.
+# Курс выбирается переменной окружения DEMOEXAM_COURSE:
+#   web (по умолчанию) — 09.02.07-3, «Веб и мультимедиа»
+#   programmer          — 09.02.07-2, «Программист»
+# Все методы класса используют эти глобальные имена во время выполнения,
 # поэтому достаточно переприсвоить их до создания окна.
 # ---------------------------------------------------------------------------
+COURSE_KEY = courses.current_key()
+COURSE_META = courses.COURSES[COURSE_KEY]
+COURSE_ID = COURSE_KEY
+COURSE_TITLE = COURSE_META["title"]
+COURSE_SUBTITLE = COURSE_META["subtitle"]
+EXAM_TITLE = f"ДЭ {COURSE_META['code']}"
+
 try:
-    import sys as _sys
-    from pathlib import Path as _Path
-    _here = str(_Path(__file__).resolve().parent)
-    if _here not in _sys.path:
-        _sys.path.insert(0, _here)
-    from course2027 import (  # noqa: F401
-        SCHEMA_SQL, WEEKS, PLAN, LESSONS, QUIZ,
-        SQL_TASKS, CRITERIA, SNIPPETS, MAX_SCORE, EXAM_TITLE,
-    )
-except ImportError as _err:  # pragma: no cover
-    print("Не удалось загрузить course2027.py:", _err)
+    _course = courses.load_course(COURSE_KEY)
+    for _name in ("SCHEMA_SQL", "WEEKS", "PLAN", "LESSONS", "QUIZ",
+                  "SQL_TASKS", "CRITERIA", "SNIPPETS", "MAX_SCORE",
+                  "EXAM_TITLE", "COURSE_ID", "COURSE_TITLE",
+                  "COURSE_SUBTITLE"):
+        if hasattr(_course, _name):
+            globals()[_name] = getattr(_course, _name)
+    TITLE = f"{EXAM_TITLE} — тренажёр (ПУ)"
+except Exception as _err:  # pragma: no cover
+    print(f"Не удалось загрузить курс {COURSE_KEY!r}: {_err}")
 
 if __name__ == "__main__":
     app = Trainer()

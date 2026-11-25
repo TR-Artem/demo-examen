@@ -105,7 +105,8 @@ def build_standalone():
         tag = f'<script src="{name}"></script>'
         assert tag in html, f"Не найден тег {tag}"
         html = html.replace(tag, "<script>\n" + code + "\n</script>")
-    assert "<script src=" not in html
+    for name in parts:
+        assert f'<script src="{name}"' not in html, f"Не заменился тег {name}"
     STANDALONE.write_text(html, encoding="utf-8")
     APK_ASSETS.mkdir(parents=True, exist_ok=True)
     (APK_ASSETS / "index.html").write_text(html, encoding="utf-8")

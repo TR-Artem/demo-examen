@@ -1,350 +1,246 @@
 # -*- coding: utf-8 -*-
 """
-Содержание курса под ДЭ-2027, квалификация «Программист» (09.02.07-2-2027),
-профильный уровень: 5 заданий, 100 баллов, 4 часа.
-Предметная область: «Чудо Обувь». Стек: Python + SQLite.
+Содержание курса под ДЭ-2027, квалификация
+«Разработчик веб и мультимедийных приложений» (09.02.07-3-2027).
 
-Файл подключается в конце trainer.py и заменяет данные 2026 года.
+База: КОД 09.02.07-3-2026 (последний завершённый экзамен), профильный уровень:
+3 модуля, 75 баллов инвариант + 25 баллов вариативная часть, 4 часа.
+Предметная область: портал онлайн-курсов «Корочки.есть».
+Стек: Python + Flask + SQLite + HTML/CSS/JavaScript.
+
+Файл подключается в конце trainer.py и заменяет данные старой версии
+для квалификации «Программист».
 """
 from __future__ import annotations
 
 MAX_SCORE = 100
-EXAM_TITLE = "ДЭ 09.02.07-2-2027 «Программист» · профильный уровень"
+COURSE_ID = "web"
+COURSE_TITLE = "Веб и мультимедиа (09.02.07-3)"
+COURSE_SUBTITLE = "Flask + SQLite + HTML/CSS/JS · 3 модуля"
+EXAM_TITLE = ("ДЭ 09.02.07-3-2027 «Разработчик веб и мультимедийных "
+              "приложений» · профильный уровень")
 
 # ---------------------------------------------------------------------------
-# 1. БАЗА ДАННЫХ: 8 таблиц «Чудо Обувь»
+# 1. БАЗА ДАННЫХ: 6 таблиц портала «Корочки.есть»
 # ---------------------------------------------------------------------------
-ROLES = [
-    (1, "Администратор"),
-    (2, "Менеджер"),
-    (3, "Авторизованный пользователь"),
-]
-
-CATEGORIES = [
-    (1, "Детская обувь"),
-    (2, "Женская"),
-    (3, "Мужская"),
-]
-
-SIZES = [
-    18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
-    36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40, 40.5, 41, 41.5, 42, 42.5,
-    43, 44, 45,
-]
-
-USERS = [
-    (1, "Иванов", "Иван", "Иванович", "admin", 1),
-    (2, "Петров", "Пётр", "Петрович", "manager", 2),
-    (3, "Сидорова", "Анна", "Сергеевна", "asidorova", 3),
-    (4, "Павлова", "Елена", "Викторовна", "epavlova", 3),
-    (5, "Васильева", "Ольга", "Игоревна", "ovasileva", 3),
-    (6, "Смирнов", "Алексей", "Дмитриевич", "asmirnov", 3),
-    (7, "Кузнецова", "Мария", "Андреевна", "mkuznetsova", 3),
-    (8, "Попов", "Денис", "Сергеевич", "dpopov", 3),
-    (9, "Новикова", "Ирина", "Павловна", "inovikova", 3),
-    (10, "Морозов", "Кирилл", "Олегович", "kmorozov", 3),
-]
-
-# product_id, category_id, subcategory, name, manufacturer, description,
-# composition, image_path, price
-PRODUCTS = [
-    (1, 2, "Кроссовки", "Кроссовки City Run", "Азимут",
-     "Кроссовки для города и прогулок. Дышащий верх, мягкая подошва.",
-     "текстиль, резина", "img/01.png", 4590.00),
-    (2, 2, "Ботинки", "Ботинки Classic", "Марко",
-     "Классические женские ботинки на низком каблуке.",
-     "натуральная кожа", "img/02.png", 7890.00),
-    (3, 2, "Туфли", "Туфли Office", "Elegance",
-     "Туфли для офиса и деловых встреч. Устойчивый каблук.",
-     "эко-кожа", None, 6290.00),
-    (4, 2, "Сандалии", "Сандалии Summer", "Азимут",
-     "Лёгкие летние сандалии с регулируемыми ремешками.",
-     "текстиль, ЭВА", "img/04.png", 2990.00),
-    (5, 2, "Кеды", "Кеды White", "Марко",
-     "Белые кеды на каждый день. Съёмная стелька.",
-     "текстиль, резина", None, 3990.00),
-    (6, 2, "Ботинки", "Ботинки Winter", "Nord",
-     "Утеплённые ботинки с мембраной для холодной погоды.",
-     "нубук, мех", "img/06.png", 9490.00),
-    (7, 2, "Туфли", "Туфли Elegance", "Elegance",
-     "Вечерние туфли с декоративной пряжкой.",
-     "эко-кожа", "img/07.png", 7290.00),
-    (8, 3, "Кроссовки", "Кроссовки Trail", "Азимут",
-     "Кроссовки для пересечённой местности и лёгкого треккинга.",
-     "текстиль, резина", "img/08.png", 6990.00),
-    (9, 3, "Ботинки", "Ботинки Trekker", "Nord",
-     "Туристические ботинки с усиленной подошвой.",
-     "нубук, резина", None, 8990.00),
-    (10, 3, "Кеды", "Кеды Retro", "Марко",
-     "Кеды в ретро-стиле, подходят к джинсам.",
-     "текстиль, резина", "img/10.png", 4490.00),
-    (11, 3, "Туфли", "Туфли Business", "Elegance",
-     "Мужские туфли для делового стиля.",
-     "натуральная кожа", "img/11.png", 8290.00),
-    (12, 3, "Сандалии", "Сандалии Beach", "Азимут",
-     "Пляжные сандалии, быстро сохнут.",
-     "ЭВА", None, 3190.00),
-    (13, 3, "Кроссовки", "Кроссовки Marathon", "Азимут",
-     "Беговые кроссовки с амортизацией.",
-     "текстиль, резина", "img/13.png", 9990.00),
-    (14, 1, "Кроссовки", "Кроссовки Sun Kids", "Азимут",
-     "Детские кроссовки с липучками.",
-     "текстиль, резина", "img/14.png", 2490.00),
-    (15, 1, "Ботинки", "Ботинки First Step", "Nord",
-     "Детские ботинки с тёплой подкладкой.",
-     "нубук, мех", None, 3290.00),
-    (16, 1, "Кеды", "Кеды School", "Марко",
-     "Школьные кеды, легко моются.",
-     "текстиль, резина", "img/16.png", 2790.00),
-]
-
-# Остатки: product_id -> [(размер, количество), ...]
-STOCK = {
-    1: [(36, 2), (37, 3), (38, 1), (39, 0), (40, 2), (41, 0)],
-    2: [(36, 1), (37, 1), (38, 1), (39, 0)],
-    3: [(36, 2), (37, 2), (38, 2), (39, 2)],
-    4: [(36, 0), (37, 1), (38, 1)],
-    5: [(36, 3), (37, 3), (38, 3)],
-    6: [(36, 1), (37, 1), (38, 1), (39, 1), (40, 1)],
-    7: [(36, 1), (37, 0)],
-    8: [(40, 2), (41, 3), (42, 1), (43, 0)],
-    9: [(40, 1), (41, 1), (42, 1)],
-    10: [(40, 4), (41, 4), (42, 4)],
-    11: [(40, 1), (41, 1), (42, 1), (43, 1)],
-    12: [(40, 0), (41, 2), (42, 2)],
-    13: [(40, 2), (41, 2), (42, 2), (43, 2), (44, 2)],
-    14: [(22, 2), (23, 2), (24, 2), (25, 2)],
-    15: [(22, 1), (23, 1), (24, 1), (25, 1)],
-    16: [(22, 1), (23, 1), (24, 1)],
-}
-
-SIZE_ID = {value: idx for idx, value in enumerate(SIZES, start=1)}
-PRICE = {p[0]: p[8] for p in PRODUCTS}
-
-PRODUCT_ITEMS = []
-ITEM_ID = {}
-_item_id = 1
-for _pid, _pairs in STOCK.items():
-    for _size, _qty in _pairs:
-        PRODUCT_ITEMS.append((_item_id, _pid, SIZE_ID[_size], _qty))
-        ITEM_ID[(_pid, _size)] = _item_id
-        _item_id += 1
-
-# order_id, смещение месяца (-1 — прошлый, 0 — текущий, -2 — позапрошлый),
-# день месяца, user_id, [(product_id, size, quantity), ...]
-ORDERS = [
-    (1, -1, 3, 4, [(1, 36, 1)]),
-    (2, -1, 7, 5, [(3, 37, 2)]),
-    (3, -1, 12, 6, [(5, 38, 1)]),
-    (4, -1, 18, 7, [(8, 41, 1)]),
-    (5, 0, 2, 4, [(10, 40, 1)]),
-    (6, 0, 9, 5, [(13, 42, 2)]),
-    (7, 0, 15, 6, [(2, 37, 1)]),
-    (8, -2, 5, 7, [(6, 38, 1)]),
-    (9, -2, 20, 8, [(14, 24, 2)]),
-    (10, -2, 25, 8, []),          # заказ без позиций — для LEFT JOIN
-]
-
-
-def _date_expr(month_offset: int, day: int) -> str:
-    return (f"date('now','start of month','{month_offset} months',"
-            f"'+{day} days')")
-
-
-def _values_sql(rows) -> str:
-    out = []
-    for row in rows:
-        vals = []
-        for value in row:
-            if value is None:
-                vals.append("NULL")
-            elif isinstance(value, str) and value.startswith("date('now'"):
-                vals.append(value)          # уже SQL-выражение
-            elif isinstance(value, (int, float)):
-                vals.append(str(value))
-            else:
-                vals.append("'" + str(value).replace("'", "''") + "'")
-        out.append(" (" + ",".join(vals) + ")")
-    return ",\n".join(out)
-
-
-_DDL = """
+SCHEMA_SQL = """
 CREATE TABLE roles (
     role_id   INTEGER PRIMARY KEY,
     role_name TEXT NOT NULL UNIQUE
 );
-CREATE TABLE categories (
-    category_id   INTEGER PRIMARY KEY,
-    category_name TEXT NOT NULL UNIQUE
-);
-CREATE TABLE sizes (
-    size_id    INTEGER PRIMARY KEY,
-    size_value REAL NOT NULL UNIQUE CHECK (size_value > 0)
-);
+
 CREATE TABLE users (
-    user_id     INTEGER PRIMARY KEY,
-    last_name   TEXT NOT NULL,
-    first_name  TEXT NOT NULL,
-    middle_name TEXT,
-    login       TEXT NOT NULL UNIQUE,
-    role_id     INTEGER NOT NULL REFERENCES roles(role_id)
+    user_id       INTEGER PRIMARY KEY,
+    login         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    full_name     TEXT NOT NULL,
+    phone         TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE,
+    role_id       INTEGER NOT NULL REFERENCES roles(role_id),
+    created_at    TEXT NOT NULL DEFAULT (date('now'))
 );
-CREATE TABLE products (
-    product_id   INTEGER PRIMARY KEY,
-    category_id  INTEGER NOT NULL REFERENCES categories(category_id),
-    subcategory  TEXT,
-    name         TEXT NOT NULL,
-    manufacturer TEXT NOT NULL,
-    description  TEXT,
-    composition  TEXT,
-    image_path   TEXT,
-    price        REAL NOT NULL CHECK (price >= 0)
+
+CREATE TABLE courses (
+    course_id      INTEGER PRIMARY KEY,
+    title          TEXT NOT NULL UNIQUE,
+    description    TEXT,
+    duration_hours INTEGER NOT NULL CHECK (duration_hours > 0),
+    price          REAL NOT NULL CHECK (price >= 0)
 );
-CREATE TABLE product_items (
-    item_id   INTEGER PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
-    size_id   INTEGER NOT NULL REFERENCES sizes(size_id) ON DELETE RESTRICT,
-    quantity  INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    UNIQUE (product_id, size_id)
+
+CREATE TABLE application_statuses (
+    status_id   INTEGER PRIMARY KEY,
+    status_name TEXT NOT NULL UNIQUE
 );
-CREATE TABLE orders (
-    order_id   INTEGER PRIMARY KEY,
-    order_date TEXT NOT NULL,
-    user_id    INTEGER NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT
+
+CREATE TABLE applications (
+    application_id INTEGER PRIMARY KEY,
+    user_id        INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    course_id      INTEGER NOT NULL REFERENCES courses(course_id) ON DELETE RESTRICT,
+    start_date     TEXT NOT NULL,
+    payment_method TEXT NOT NULL CHECK (payment_method IN ('cash', 'phone_transfer')),
+    status_id      INTEGER NOT NULL REFERENCES application_statuses(status_id),
+    cancel_reason  TEXT,
+    created_at     TEXT NOT NULL DEFAULT (date('now'))
 );
-CREATE TABLE order_items (
-    order_item_id INTEGER PRIMARY KEY,
-    order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
-    item_id       INTEGER NOT NULL REFERENCES product_items(item_id) ON DELETE RESTRICT,
-    quantity      INTEGER NOT NULL CHECK (quantity > 0),
-    unit_price    REAL NOT NULL CHECK (unit_price >= 0)
+
+CREATE TABLE reviews (
+    review_id      INTEGER PRIMARY KEY,
+    application_id INTEGER NOT NULL UNIQUE
+                   REFERENCES applications(application_id) ON DELETE CASCADE,
+    user_id        INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    rating         INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review_text    TEXT,
+    created_at     TEXT NOT NULL DEFAULT (date('now'))
 );
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_items_product ON product_items(product_id);
-CREATE INDEX idx_order_items_order ON order_items(order_id);
+
+CREATE INDEX idx_applications_user   ON applications(user_id);
+CREATE INDEX idx_applications_course ON applications(course_id);
+CREATE INDEX idx_applications_status ON applications(status_id);
+CREATE INDEX idx_reviews_rating      ON reviews(rating);
+
+INSERT INTO roles (role_id, role_name) VALUES
+    (1, 'Администратор'),
+    (2, 'Пользователь');
+
+INSERT INTO users
+    (user_id, login, password_hash, full_name, phone, email, role_id, created_at)
+VALUES
+    (1, 'Admin', 'hash_admin_demo', 'Администратор портала',
+     '8(900)000-00-00', 'admin@korochki.ru', 1, date('now', '-200 days')),
+    (2, 'ivanov01', 'hash_demo_2', 'Иванов Иван Иванович',
+     '8(921)111-11-11', 'ivanov@example.ru', 2, date('now', '-180 days')),
+    (3, 'petrova02', 'hash_demo_3', 'Петрова Анна Сергеевна',
+     '8(921)222-22-22', 'petrova@example.ru', 2, date('now', '-170 days')),
+    (4, 'sidorov03', 'hash_demo_4', 'Сидоров Пётр Алексеевич',
+     '8(812)333-33-33', 'sidorov@example.ru', 2, date('now', '-160 days')),
+    (5, 'kuznetsova04', 'hash_demo_5', 'Кузнецова Мария Андреевна',
+     '8(921)444-44-44', 'kuznetsova@example.ru', 2, date('now', '-150 days')),
+    (6, 'smirnov05', 'hash_demo_6', 'Смирнов Алексей Дмитриевич',
+     '8(812)555-55-55', 'smirnov@example.ru', 2, date('now', '-140 days')),
+    (7, 'popova06', 'hash_demo_7', 'Попова Ольга Игоревна',
+     '8(921)666-66-66', 'popova@example.ru', 2, date('now', '-130 days')),
+    (8, 'morozov07', 'hash_demo_8', 'Морозов Кирилл Олегович',
+     '8(812)777-77-77', 'morozov@example.ru', 2, date('now', '-120 days'));
+
+INSERT INTO courses (course_id, title, description, duration_hours, price) VALUES
+    (1, 'Основы алгоритмизации и программирования',
+     'Логика, блок-схемы, базовые конструкции и первые программы.', 72, 12000),
+    (2, 'Основы веб-дизайна',
+     'Композиция, цвет, типографика, макеты и адаптивные интерфейсы.', 48, 9000),
+    (3, 'Основы проектирования баз данных',
+     'Модели данных, нормализация, ER-диаграммы, SQL и ограничения.', 64, 11000),
+    (4, 'Python для анализа данных',
+     'Структуры данных, файлы, pandas, визуализация и отчёты.', 80, 15000),
+    (5, 'UX/UI-дизайн мобильных приложений',
+     'Исследование, прототипы, мобильные паттерны и дизайн-система.', 40, 8000),
+    (6, 'Основы кибербезопасности',
+     'Пароли, шифрование, веб-уязвимости и базовая защита приложений.', 56, 10000),
+    (7, 'Основы работы с графикой',
+     'Растровая и векторная графика, подготовка изображений для веба.', 32, 7000);
+
+INSERT INTO application_statuses (status_id, status_name) VALUES
+    (1, 'Новая'),
+    (2, 'Идет обучение'),
+    (3, 'Обучение завершено'),
+    (4, 'Отменена');
+
+INSERT INTO applications
+    (application_id, user_id, course_id, start_date, payment_method,
+     status_id, cancel_reason, created_at)
+VALUES
+    (1, 2, 1, date('now', '+14 days'), 'cash', 1, NULL, date('now', '-75 days')),
+    (2, 3, 2, date('now', '+7 days'),  'phone_transfer', 2, NULL, date('now', '-70 days')),
+    (3, 4, 3, date('now', '-20 days'), 'cash', 3, NULL, date('now', '-45 days')),
+    (4, 5, 1, date('now', '-60 days'), 'phone_transfer', 3, NULL, date('now', '-40 days')),
+    (5, 6, 4, date('now', '-10 days'), 'cash', 4, 'Не подошло расписание', date('now', '-20 days')),
+    (6, 7, 5, date('now', '+21 days'), 'cash', 1, NULL, date('now', '-15 days')),
+    (7, 8, 2, date('now', '-5 days'),  'cash', 3, NULL, date('now', '-10 days')),
+    (8, 2, 3, date('now', '+3 days'),  'phone_transfer', 2, NULL, date('now', '-5 days')),
+    (9, 3, 6, date('now', '-30 days'), 'phone_transfer', 3, NULL, date('now', '-2 days')),
+    (10, 4, 4, date('now', '+30 days'), 'cash', 1, NULL, date('now')),
+    (11, 5, 5, date('now', '-45 days'), 'cash', 4, 'Нет свободных мест', date('now', '-50 days')),
+    (12, 6, 6, date('now', '-15 days'), 'cash', 3, NULL, date('now', '-25 days')),
+    (13, 7, 1, date('now', '+10 days'), 'phone_transfer', 2, NULL, date('now', '-35 days')),
+    (14, 8, 3, date('now', '-2 days'),  'cash', 1, NULL, date('now', '-12 days'));
+
+INSERT INTO reviews
+    (review_id, application_id, user_id, rating, review_text, created_at)
+VALUES
+    (1, 3, 4, 5, 'Отличный курс, много практики по проектированию БД.', date('now', '-15 days')),
+    (2, 4, 5, 4, 'Понятно объясняют алгоритмы, но мало домашних заданий.', date('now', '-20 days')),
+    (3, 7, 8, 5, 'Веб-дизайн — лучший курс, сразу применил на проекте.', date('now', '-3 days')),
+    (4, 9, 3, 3, 'Материал полезный, однако темп слишком быстрый.', date('now', '-1 days')),
+    (5, 12, 6, 4, 'Хорошее введение в безопасность, пригодилось на работе.', date('now', '-8 days'));
 """
 
-_sql_parts = [_DDL]
-_sql_parts.append("INSERT INTO roles (role_id, role_name) VALUES\n"
-                  + _values_sql(ROLES) + ";\n")
-_sql_parts.append("INSERT INTO categories (category_id, category_name) VALUES\n"
-                  + _values_sql(CATEGORIES) + ";\n")
-_sql_parts.append("INSERT INTO sizes (size_id, size_value) VALUES\n"
-                  + _values_sql([(i, v) for i, v in enumerate(SIZES, 1)]) + ";\n")
-_sql_parts.append("INSERT INTO users (user_id, last_name, first_name, middle_name, "
-                  "login, role_id) VALUES\n" + _values_sql(USERS) + ";\n")
-_sql_parts.append("INSERT INTO products (product_id, category_id, subcategory, name, "
-                  "manufacturer, description, composition, image_path, price) VALUES\n"
-                  + _values_sql(PRODUCTS) + ";\n")
-_sql_parts.append("INSERT INTO product_items (item_id, product_id, size_id, quantity) VALUES\n"
-                  + _values_sql(PRODUCT_ITEMS) + ";\n")
-
-_order_rows = []
-for oid, month, day, uid, _ in ORDERS:
-    _order_rows.append((oid, _date_expr(month, day), uid))
-_sql_parts.append("INSERT INTO orders (order_id, order_date, user_id) VALUES\n"
-                  + _values_sql(_order_rows) + ";\n")
-
-_order_item_rows = []
-_oi_id = 1
-for oid, _m, _d, _u, positions in ORDERS:
-    for pid, size, qty in positions:
-        _order_item_rows.append(
-            (_oi_id, oid, ITEM_ID[(pid, size)], qty, PRICE[pid]))
-        _oi_id += 1
-_sql_parts.append("INSERT INTO order_items (order_item_id, order_id, item_id, "
-                  "quantity, unit_price) VALUES\n"
-                  + _values_sql(_order_item_rows) + ";\n")
-
-SCHEMA_SQL = "".join(_sql_parts)
-
 # ---------------------------------------------------------------------------
-# 2. ПЛАН НА 12 НЕДЕЛЬ (60 занятий, 60–90 минут)
+# 2. ПЛАН НА 12 НЕДЕЛЬ (60 занятий, 60–120 минут)
 # ---------------------------------------------------------------------------
 WEEKS = [
-    ("Неделя 1. Python с нуля: первые программы", [
-        ("Установка и первая программа", "Python с python.org, галочка Add to PATH, IDLE/VS Code, print('Привет').", 60),
-        ("Переменные и типы", "int, float, str, bool, type(), преобразование типов. Цена, скидка, количество.", 60),
-        ("Ввод и вывод", "input(), f-строки, форматирование денег {price:.2f}. Калькулятор скидки 25%.", 70),
-        ("Арифметика и ошибки", "+ - * / // % **, приоритет, чтение traceback. Не бояться красного текста.", 60),
-        ("Закрепление", "Программа: цена и скидка → итоговая цена; проверка на 3 наборах данных.", 70),
+    ("Неделя 1. Как устроен веб и HTML", [
+        ("Клиент, сервер, HTTP", "URL, запрос/ответ, методы GET/POST, коды 200/302/404/500, DevTools → Network.", 60),
+        ("Каркас HTML-документа", "DOCTYPE, html/head/body, meta charset, viewport, title, подключение CSS/JS.", 60),
+        ("Семантика и контент", "header/nav/main/section/footer, заголовки h1–h3, списки, ссылки, изображения и alt.", 70),
+        ("Формы", "form, label, input, select, textarea, button, required, type=email/date/tel, autocomplete.", 80),
+        ("Мини-страница портала", "Собери статическую страницу «Корочки.есть»: шапка, курсы, форма заявки.", 90),
     ]),
-    ("Неделя 2. Управление и структуры данных", [
-        ("Условия", "if/elif/else, and/or/not. «много», если больше 5, иначе «мало».", 70),
-        ("Цикл for", "range(), перебор списка, enumerate(). Сумма остатков по размерам.", 70),
-        ("Цикл while", "while, break, continue. Повтор ввода логина до успеха.", 70),
-        ("Списки и словари", "append(), срезы, dict, items(). Каталог как список словарей.", 80),
-        ("Функции", "def, параметры, return. final_price(price, has_orders_last_month).", 80),
+    ("Неделя 2. CSS и адаптивная вёрстка", [
+        ("Селекторы и каскад", "Классы, id, псевдоклассы, специфичность, наследование, CSS-переменные.", 70),
+        ("Box model и типографика", "margin/padding/border, box-sizing, размеры, шрифты, межстрочный интервал.", 70),
+        ("Flexbox", "display:flex, направление, выравнивание, gap, перенос, шапка и карточки.", 80),
+        ("Grid и компоненты", "grid-template-columns, auto-fit/minmax, карточки курсов, кнопки, поля.", 80),
+        ("Адаптив 390×844", "Mobile-first, media queries, мобильная навигация, проверка в DevTools.", 90),
     ]),
-    ("Неделя 3. Файлы, исключения, алгоритмы", [
-        ("Файлы и CSV", "open(), with, encoding='utf-8', csv.DictReader. Подготовка файлов import.", 70),
-        ("Исключения", "try/except/else/finally, ValueError, sqlite3.Error. Понятные сообщения.", 70),
-        ("Отладка", "traceback, print-отладка, пошаговое выполнение, проверка после каждого изменения.", 60),
-        ("Блок-схема по ГОСТ 19.701-90", "Овал, процесс, ромб (Да/Нет), ввод/вывод. Алгоритм оформления заказа.", 90),
-        ("Модули проекта", "Разделение db.py / ui.py / main.py, __main__, структура папки для сдачи.", 60),
+    ("Неделя 3. JavaScript и интерактив", [
+        ("DOM и функции", "querySelector, textContent, classList, addEventListener, стрелочные функции.", 80),
+        ("События и формы", "submit, preventDefault, ввод, клики, делегирование, работа с data-атрибутами.", 80),
+        ("Валидация на клиенте", "Проверка логина, пароля, телефона, email; сообщения под полем; regex.", 90),
+        ("Слайдер", "4 изображения, автопереключение раз в 3 секунды, кнопки назад/вперёд, пауза.", 90),
+        ("Анимации", "transition, transform, keyframes, микроанимации, prefers-reduced-motion.", 80),
     ]),
-    ("Неделя 4. SQL, часть 1: выборка", [
-        ("SELECT и WHERE", "Столбцы, условия, AND/OR. Задания 1–3 в «SQL-практике».", 80),
-        ("ORDER BY и LIMIT", "Сортировка по цене ASC/DESC — как в Задании 3. Задание 7.", 70),
-        ("LIKE и поиск", "Поиск по наименованию и описанию. lower() в SQLite не работает с кириллицей.", 70),
-        ("NULL и COALESCE", "Картинка-заглушка: image_path IS NULL. COALESCE(image_path,'picture.png').", 60),
-        ("Закрепление", "Задания 1, 2, 5, 6, 7 без подсказок.", 80),
+    ("Неделя 4. Git и проектная работа", [
+        ("Git: основы", "git init, status, add, commit -m, log, diff; осмысленные коммиты.", 60),
+        ("Удалённый репозиторий", "remote, push, pull, ветки, конфликты, .gitignore для venv и *.db.", 70),
+        ("Структура проекта", "Папки templates/static/src, README.md, requirements.txt, .env.example.", 70),
+        ("Отладка в браузере", "Console, Elements, Network, Sources, breakpoints, чтение ошибок Flask.", 70),
+        ("Статический прототип + git", "Собери 3 страницы прототипа, сделай 5+ коммитов и README.", 100),
     ]),
-    ("Неделя 5. SQL, часть 2: связи, агрегаты, даты", [
-        ("JOIN", "products + categories, users + orders. Задания 8, 13.", 90),
-        ("GROUP BY и агрегаты", "SUM(quantity) по модели, COUNT, AVG. Задания 2, 11.", 90),
-        ("CASE и «много/мало»", "CASE WHEN SUM(quantity)>5 THEN 'много' ELSE 'мало' END.", 80),
-        ("Даты и 25% скидка", "date('now','start of month','-1 month'), NOT EXISTS, CASE. Задание 4.", 100),
-        ("Повторение SQL", "Задания 1–14 на время (40 минут).", 80),
+    ("Неделя 5. Python и Flask", [
+        ("Python для web", "Типы, функции, модули, исключения, list/dict, чтение JSON, виртуальное окружение.", 80),
+        ("Первый Flask-проект", "venv, pip install flask, app.py, маршрут /, debug, запуск на localhost.", 80),
+        ("Маршруты и Jinja2", "route, переменные в URL, render_template, циклы/условия, фильтры, escape.", 90),
+        ("Формы GET/POST", "request.args, request.form, валидация, redirect после POST (PRG).", 90),
+        ("Сессии и flash", "session, secret_key, вход/выход, flash + get_flashed_messages, сообщения.", 90),
     ]),
-    ("Неделя 6. Проектирование БД «Чудо Обувь»", [
-        ("Предметная область", "Приложение 1: пользователи, товары, размеры, позиции, заказы, строки.", 70),
-        ("Ключи и связи", "PK/FK, 1:M, UNIQUE(product_id,size_id), ON DELETE CASCADE/RESTRICT.", 80),
-        ("1НФ/2НФ/3НФ", "Размеры отдельно, категории отдельно, позиция = модель + размер.", 90),
-        ("ER-диаграмма 8 таблиц", "draw.io / SSMS / DBeaver, PDF: таблицы, атрибуты, связи, PK/FK.", 90),
-        ("DDL и ограничения", "CREATE TABLE, CHECK, UNIQUE, FK actions. См. lab/schema.sql.", 80),
+    ("Неделя 6. SQL и проектирование БД", [
+        ("Реляционная модель", "Таблицы, строки, PK, FK, UNIQUE, CHECK, 1:M, 3НФ.", 80),
+        ("SELECT и фильтры", "SELECT, WHERE, AND/OR, ORDER BY, LIMIT, LIKE, NULL, COALESCE.", 80),
+        ("JOIN и агрегаты", "INNER/LEFT JOIN, COUNT, SUM, AVG, GROUP BY, HAVING.", 90),
+        ("Даты и подзапросы", "date(), strftime(), CASE, EXISTS, коррелированные подзапросы.", 90),
+        ("ER и DDL «Корочки.есть»", "6 таблиц, связи, ограничения, ER-диаграмма, schema.sql с данными.", 100),
     ]),
-    ("Неделя 7. Задание 1: БД в SQLite + импорт", [
-        ("sqlite3 из Python", "connect, execute, executemany, fetchall, commit, close.", 80),
-        ("Скрипт БД с данными", "schema.sql: DDL + INSERT + динамические даты date('now',...).", 80),
-        ("Импорт CSV", "csv.DictReader → справочники → товары → позиции → пользователи → заказы.", 90),
-        ("Проверка ссылочной целостности", "PRAGMA foreign_keys=ON, попытки нарушить FK, ON DELETE.", 70),
-        ("Сдача Задания 1", "schema.sql, ER.pdf, данные, скриншоты. Чек-лист 15 баллов.", 90),
+    ("Неделя 7. Бэкенд и безопасность", [
+        ("sqlite3 во Flask", "connect, row_factory, параметризованные запросы, commit, закрытие соединения.", 90),
+        ("Регистрация", "Валидация всех полей, уникальный логин, хеширование пароля, ошибки на форме.", 90),
+        ("Вход и сессии", "check_password_hash, session['user_id'], logout, защита маршрутов.", 80),
+        ("Роли и доступ", "Пользователь/администратор, декоратор login_required, проверка role_id.", 80),
+        ("SQL-инъекции, XSS, CSRF", "Параметры вместо конкатенации, autoescape, CSRF-токен, безопасные cookie.", 100),
     ]),
-    ("Неделя 8. tkinter: интерфейс", [
-        ("Окно и виджеты", "Tk, Frame, Label, Entry, Button, pack/grid, заголовок окна.", 80),
-        ("Treeview", "Таблица товаров: колонки, heading, tags для подсветки.", 90),
-        ("События и переменные", "StringVar, trace_add('write') — поиск без кнопки «Найти».", 80),
-        ("Сообщения и валидация", "showerror/showwarning/showinfo, askyesno, проверка чисел.", 70),
-        ("Экраны и переходы", "Frame + tkraise(), «Назад», ФИО в правом верхнем углу.", 90),
+    ("Неделя 8. Модуль 1: full-stack приложение", [
+        ("Каркас проекта", "app factory, конфиг, БД, шаблоны, статика, обработчики 404/500.", 90),
+        ("Регистрация и вход", "Полный сценарий: форма → валидация → БД → вход → личный кабинет.", 100),
+        ("Личный кабинет", "Свои заявки, статусы, пустое состояние, кнопка новой заявки.", 90),
+        ("Создание заявки", "Курс из списка, дата ДД.ММ.ГГГГ, способ оплаты, валидация, запись в БД.", 100),
+        ("Статусы и отзывы", "Новая → Идет обучение → Завершено; отзыв только после завершения.", 100),
     ]),
-    ("Неделя 9. Задание 2: каталог и скидка", [
-        ("Алгоритм и блок-схема", "Алгоритм оформления заказа + расчёт цены со скидкой → PDF.", 80),
-        ("Стиль, логотип, иконка", "Приложение 3: цвета, шрифты, название компании, icon, logo.", 70),
-        ("Каталог из БД", "Изображение, категория, наименование, производство, состав, цена.", 90),
-        ("Много/мало и подсветка", "SUM(quantity)>5 → «много»; ≤3 → светло-красный фон.", 80),
-        ("Скидка 25%", "Нет заказов в прошлом месяце → price*0.75; проверка на данных.", 100),
+    ("Неделя 9. Модуль 2: дизайн", [
+        ("Дизайн-концепция", "ЦА, сценарии, корпоративный стиль, палитра, шрифты, логотип.", 80),
+        ("Прототип и компоненты", "Сетка, карточки, кнопки, поля, состояния hover/focus/error/empty.", 90),
+        ("Мобильная версия", "390×844, мобильное меню, крупные зоны нажатия, читаемость, контраст.", 90),
+        ("Слайдер и галерея", "4 одинаковых изображения, 3 секунды, кнопки, точки, пауза при наведении.", 90),
+        ("Анимации и доступность", "Плавные переходы, skeleton, focus-visible, alt, aria-label, reduced-motion.", 90),
     ]),
-    ("Неделя 10. Задание 3: авторизация и заказ", [
-        ("Вход только по логину", "Список пользователей из БД, без пароля, «Без входа» для гостя.", 80),
-        ("Роли и ФИО", "Гость / пользователь / менеджер / администратор, ФИО справа вверху, выход.", 80),
-        ("Поиск, фильтр, сортировка", "Категория «Все категории», цена ↑↓, поиск по названию и описанию.", 100),
-        ("Карточка товара", "Все поля, размерный ряд, доступные размеры, количество, «В корзину».", 100),
-        ("Оформление заказа", "Корзина, подтверждение, дата, списание остатков, обновление каталога.", 120),
+    ("Неделя 10. Модуль 3: админка и оптимизация", [
+        ("Админ-панель", "Все заявки: ФИО, телефон, курс, дата, оплата, статус.", 100),
+        ("Фильтр и поиск", "Фильтр по статусу, поиск по ФИО/курсу, сортировка по дате, сброс фильтров.", 90),
+        ("Пагинация и сообщения", "По 5–10 строк, номера страниц, flash после действий, пустой результат.", 90),
+        ("Смена статусов", "«Идет обучение» и «Обучение завершено» (КОД 2026); проверка роли администратора.", 90),
+        ("Оптимизация", "Индексы, отсутствие N+1, LIMIT, кэш, сжатие, ленивая загрузка изображений.", 100),
     ]),
-    ("Неделя 11. Задания 4–5: заказы и статистика", [
-        ("Список заказов", "Дата, ФИО клиента, итоговая сумма, кнопка «Состав».", 90),
-        ("Состав заказа", "Товар + производство, размер, количество, цена за единицу, сумма.", 90),
-        ("Добавление и удаление", "Выбор товара с поиском, размер, количество; удаление позиции.", 100),
-        ("Администратор", "Изменение даты заказа, удаление позиций, обновление списков.", 90),
-        ("Статистика и руководство", "Кнопка «Статистика», 3 показателя, Руководство_пользователя.docx 1–2 стр.", 110),
+    ("Неделя 11. Документы и вариативная часть", [
+        ("README и ER", "Описание, стек, запуск, структура, схема БД, скриншоты, автор.", 80),
+        ("Руководство пользователя", "1–2 страницы, 4+ скриншота: регистрация, заявка, админка, отзыв.", 90),
+        ("JSON API", "GET/POST /api/applications, JSON, коды ответов, проверка авторизации.", 90),
+        ("Тесты", "unittest/pytest: регистрация, вход, создание заявки, запрет админки.", 90),
+        ("Деплой и бэкап", ".env, debug=False, миграции, резервная копия SQLite, чек-лист запуска.", 80),
     ]),
-    ("Неделя 12. Пробники и сдача на 5", [
-        ("Пробник №1: Задания 1–2", "Таймер 1 ч 30 мин. БД + ER + импорт + каталог + скидка.", 110),
-        ("Разбор ошибок №1", "Чек-лист на 100 баллов, слабые критерии, повтор теории.", 70),
-        ("Пробник №2: Задания 1–3", "Таймер 2 ч 30 мин. Плюс авторизация, фильтры, заказ.", 150),
-        ("Пробник №3: все 5 заданий", "Таймер 4 ч 00 мин. Цель ≥90% на «5».", 240),
-        ("Экзаменационный день", "Артефакты, git, README, руководство, тайминг, запреты.", 80),
+    ("Неделя 12. Пробники и экзаменационный день", [
+        ("Пробник №1: Модуль 1", "Таймер 1:30. БД, регистрация, вход, заявки, статусы, git.", 100),
+        ("Разбор ошибок №1", "Чек-лист 100 баллов, слабые критерии, повтор теории и SQL.", 70),
+        ("Пробник №2: Модули 1–2", "Таймер 3:00. Плюс дизайн, адаптив 390×844, слайдер, анимации.", 180),
+        ("Пробник №3: все модули", "Таймер 4:00. Полный сценарий + вариативная часть.", 240),
+        ("Экзаменационный день", "Тайминг, git-коммиты, скриншоты, документы, типичные потери баллов.", 80),
     ]),
 ]
 
@@ -365,406 +261,707 @@ for _w, (_theme, _days) in enumerate(WEEKS, start=1):
 # 3. ТЕОРИЯ
 # ---------------------------------------------------------------------------
 LESSONS = [
-    ("l01", "Экзамен", "ДЭ-2027: 5 заданий и 100 баллов", 10, """
-Официальный проект КИМ: 09.02.07-2-2027, квалификация «Программист»,
-профильный уровень. ФГОС СПО 09.02.07, приказ Минобрнауки от 09.12.2016 № 1547.
+    ("l01", "Экзамен", "ДЭ-2027 для веб-квалификации: что изменилось", 12, """
+Ориентир — последний завершённый экзамен: КОД 09.02.07-3-2026,
+квалификация «Разработчик веб и мультимедийных приложений»,
+профильный уровень. На 2027 год структура с высокой вероятностью
+сохранится: 3 модуля, 4 часа, 100 баллов.
 
-Структура (4 часа = 240 минут):
-• Задание 1. База данных средствами СУБД — 50 мин, 15 баллов
-• Задание 2. Алгоритм и приложение — 40 мин, 10 баллов
-• Задание 3. Интерфейс и оформление заказа — 60 мин, 25 баллов
-• Задание 4. Работа с заказами у Администратора и Менеджера — 60 мин, 25 баллов
-• Задание 5. Статистика заказов + руководство пользователя — 30 мин, 25 баллов
-  (вариативная часть; инвариант = 75, всего 100)
+ВАЖНО: на 23.11.2026 спецификация КИМ 09.02.07-3-2027 в открытом
+доступе не подтверждена. Перед экзаменом скачай финальный документ
+с bom.firpo.ru/Public/y/2027 и сверь модули, время и баллы.
 
-Предметная область: торговая компания «Чудо Обувь». 8 таблиц:
-роли, категории, размеры, пользователи, товары, товарные позиции,
-заказы, строки заказов.
+МОДУЛИ И ВРЕМЯ
+• Модуль 1. Проектирование и разработка информационных систем — 1 ч 30 мин.
+• Модуль 2. Разработка дизайна веб-приложений — 1 ч 30 мин.
+• Модуль 3. Проектирование, разработка и оптимизация веб-приложений — 1 ч 00 мин.
 
-Ключевые отличия от 2026 года:
-• вход в систему ТОЛЬКО по логину, пароль не нужен;
-• товарная позиция = модель + размер, остаток хранится по размерам;
-• скидка 25% — товарам, по которым НЕ БЫЛО заказов в прошлом календарном месяце;
-• «много» — больше 5 пар суммарно по размерам, «мало» — 5 и меньше;
-• строки с остатком ≤ 3 подсвечиваются светло-красным;
-• в Задании 5 — окно статистики и Руководство_пользователя.docx;
-• в репозитории нужен README.md с описанием функциональности.
+БАЛЛЫ (инвариант 75 + вариатив 25)
+• Модуль 1 — 25: безопасность 18, разработка модулей 4, современные средства 3.
+• Модуль 2 — 25: дизайн-концепция 13, требования к дизайну 4, современные тенденции 8.
+• Модуль 3 — 25: веб-приложение 14, интерфейс пользователя 11.
+• Вариативная часть — 25: определяет колледж (API, тесты, документация, деплой).
 
-Артефакты: ER.pdf, блок-схема.pdf, schema.sql (с данными), исходники папкой
-(не архив), исполняемые файлы, README.md, Руководство_пользователя.docx.
+ПРЕДМЕТНАЯ ОБЛАСТЬ 2026
+Портал «Корочки.есть» — запись на онлайн-курсы дополнительного
+профессионального образования. Пользователь регистрируется, входит,
+создаёт заявку на курс, указывает дату начала и способ оплаты.
+Администратор (Admin / KorokNET) видит все заявки и меняет статусы:
+«Новая» → «Идет обучение» → «Обучение завершено» (это требует КОД 2026)
+с обязательной причиной.
+
+ЧТО ПРОВЕРЯЮТ
+• Полный стек: фронтенд, бэкенд, БД, ООП, библиотеки/фреймворки.
+• Регистрация с валидацией и уникальным логином.
+• Вход/выход, сессии, роли, защита админ-маршрутов.
+• Заявки: создание, список, статусы, отзыв после завершения.
+• Адаптивный дизайн 390×844, слайдер 4 изображения / 3 секунды.
+• Анимации и микроанимации, аккуратный интерфейс.
+• Git-репозиторий: исходники папкой, скрипт БД, README, документы.
+
+ГЛАВНОЕ ОТЛИЧИЕ ОТ «ПРОГРАММИСТА»
+Там был Python + SQLite + tkinter и 5 заданий «Чудо Обувь».
+Здесь — веб-приложение: HTML/CSS/JS + серверный язык + БД + git.
+Старый курс для «Программиста» лежит в legacy/ и больше не является
+основным.
 """),
-    ("l02", "Python", "Python за одну страницу", 10, """
-name = input('Логин: ')                  # str
-price = 4590.0                          # float
-quantity = 2                            # int
-has_orders = False                      # bool
-print(f'{name}: {price:.2f} руб., {quantity} шт.')
+    ("l02", "HTML", "HTML: каркас, семантика, формы", 12, """
+Минимальный каркас:
 
-if quantity > 5:
-    label = 'много'
-else:
-    label = 'мало'
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Корочки.есть — онлайн-курсы</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">...</header>
+  <nav class="main-nav">...</nav>
+  <main>...</main>
+  <footer>...</footer>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
 
-for size, qty in [(36, 2), (37, 3), (38, 1)]:
-    print(size, qty)
+СЕМАНТИКА
+• header — шапка, nav — навигация, main — основное содержимое;
+• section/article — смысловые блоки, footer — подвал;
+• один h1 на страницу, дальше h2/h3 без пропуска уровней;
+• изображения всегда с alt, декоративные — alt="".
 
-products = []                           # список
-products.append({'id': 1, 'name': 'Кроссовки', 'price': 4590.0})
-first = products[0]                     # словарь
-print(first['price'])
+ФОРМА РЕГИСТРАЦИИ
+<form method="post" novalidate>
+  <label for="login">Логин</label>
+  <input id="login" name="login" required minlength="6"
+         pattern="[A-Za-z0-9]{6,}" autocomplete="username">
 
-def final_price(price: float, no_orders_last_month: bool) -> float:
-    '''Цена с учётом скидки 25% (Задание 2).'''
-    return round(price * 0.75, 2) if no_orders_last_month else price
+  <label for="password">Пароль</label>
+  <input id="password" name="password" type="password"
+         required minlength="8" autocomplete="new-password">
 
-Главное: отступы 4 пробела, двоеточие после if/for/def, имена в snake_case,
-одна команда в строке (требование КИМ).
+  <label for="phone">Телефон</label>
+  <input id="phone" name="phone" type="tel"
+         placeholder="8(921)111-11-11" required>
+
+  <label for="email">E-mail</label>
+  <input id="email" name="email" type="email" required>
+
+  <button type="submit">Зарегистрироваться</button>
+</form>
+
+ПРАВИЛА ЭКЗАМЕНА
+• логин — латиница и цифры, не менее 6 символов, уникальный;
+• пароль — минимум 8 символов;
+• ФИО — кириллица и пробелы;
+• телефон — 8(XXX)XXX-XX-XX;
+• email — формат электронной почты;
+• все поля обязательны, ошибки показываются на форме.
 """),
-    ("l03", "Python", "Управление, коллекции, функции", 10, """
-# Условия
-total = 4
-if total > 5:
-    label = 'много'
-elif total <= 3:
-    label = 'мало (подсветить)'
-else:
-    label = 'мало'
+    ("l03", "CSS", "CSS: каскад, Flexbox, Grid", 12, """
+ПОДКЛЮЧЕНИЕ И ПЕРЕМЕННЫЕ
 
-# Циклы
-total = 0
-for size, qty in stock:
-    total += qty
-while True:
-    login = input('Логин: ')
-    if login:
-        break
+:root {
+  --brand: #2563eb;
+  --brand-dark: #1e40af;
+  --bg: #f8fafc;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --danger: #dc2626;
+  --radius: 14px;
+}
 
-# Списки и словари
-items = [{'product_id': 1, 'qty': 2}, {'product_id': 2, 'qty': 1}]
-by_id = {item['product_id']: item for item in items}
-cart = []
-cart.append({'item_id': 5, 'qty': 2, 'price': 4590.0})
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
 
-# Функции
-def order_total(rows):
-    return round(sum(r['qty'] * r['price'] for r in rows), 2)
+FLEXBOX: ШАПКА
 
-Для экзамена достаточно этих конструкций: условия, for, while, list, dict,
-функции, try/except.
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+GRID: КАРТОЧКИ КУРСОВ
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.course-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+}
+
+СОСТОЯНИЯ
+• :hover — наведение;
+• :focus-visible — видимый фокус с клавиатуры;
+• .is-error — красная рамка и текст ошибки;
+• .is-disabled — сниженная прозрачность, cursor: not-allowed.
+
+ПРАВИЛА
+• не больше 2–3 основных цветов;
+• отступы кратны 4/8 px;
+• контраст текста не ниже 4.5:1;
+• никаких фиксированных высот, из-за которых ломается мобильная версия.
 """),
-    ("l04", "Python", "Исключения, отладка, файлы", 8, """
-try:
-    price = float(entry_price.get())
-    if price < 0:
-        raise ValueError('Цена не может быть отрицательной')
-except ValueError as err:
-    messagebox.showerror('Ошибка ввода',
-        f'{err}. Введите число >= 0 и повторите сохранение.')
-except sqlite3.Error as err:
-    messagebox.showerror('Ошибка базы данных',
-        f'Не удалось сохранить данные: {err}')
-finally:
-    pass
+    ("l04", "CSS", "Адаптивность: 390×844 и mobile-first", 10, """
+МОБИЛЬНЫЙ ЭКРАН ЭКЗАМЕНА — 390×844 px.
+Проектируем сначала мобильную версию, затем расширяем.
 
-CSV:
-import csv
-with open('products_import.csv', encoding='utf-8', newline='') as f:
-    for row in csv.DictReader(f, delimiter=';'):
-        print(row['name'], row['price'])
+/* база — мобильная */
+.container { width: min(100% - 32px, 1120px); margin-inline: auto; }
+.course-grid { grid-template-columns: 1fr; }
+.main-nav { display: none; }
+.main-nav.is-open { display: flex; flex-direction: column; }
 
-Отладка: читай traceback снизу вверх; проверяй путь к БД; после INSERT/UPDATE/
-DELETE вызывай commit(); после изменения данных перезапрашивай SELECT и обновляй
-таблицу на экране; делай скриншоты корректной работы.
+/* планшет */
+@media (min-width: 640px) {
+  .course-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* десктоп */
+@media (min-width: 960px) {
+  .course-grid { grid-template-columns: repeat(3, 1fr); }
+  .main-nav { display: flex; flex-direction: row; gap: 18px; }
+  .nav-toggle { display: none; }
+}
+
+МОБИЛЬНЫЕ ПРАВИЛА
+• зона нажатия — не меньше 44×44 px;
+• шрифт полей — не меньше 16 px, иначе iOS зумит;
+• таблицы превращаются в карточки или получают горизонтальный скролл;
+• меню — кнопка-гамбургер с aria-expanded;
+• изображения — max-width: 100%; height: auto;
+• проверяй в DevTools: iPhone 12/13/14 (390×844).
+
+ЧАСТЫЕ ОШИБКИ
+• горизонтальный скролл из-за width: 100vw;
+• текст, вылезающий из кнопки;
+• фиксированная ширина 1200 px;
+• мелкие ссылки в подвале;
+• слайдер выше экрана и перекрывает контент.
 """),
-    ("l05", "БД", "8 таблиц «Чудо Обувь»", 10, """
-Таблицы и связи:
-  roles 1—M users
-  categories 1—M products
-  products 1—M product_items M—1 sizes
-  users 1—M orders
-  orders 1—M order_items M—1 product_items
+    ("l05", "JavaScript", "JavaScript: DOM, события, валидация", 12, """
+ПОИСК ЭЛЕМЕНТОВ
 
-Почему так:
-• размер — отдельная сущность (35 значений), а не столбцы 36,37,38;
-• товарная позиция = сочетание модели и размера + количество на складе;
-• в order_items хранится историческая цена за единицу (цена в каталоге может
-  измениться, а сумма заказа — нет);
-• итоговая сумма заказа НЕ хранится, она считается:
-  SUM(order_items.quantity * order_items.unit_price).
+const form = document.querySelector('#register-form');
+const login = document.querySelector('#login');
+const error = document.querySelector('#login-error');
 
-Ограничения:
-• UNIQUE(product_id, size_id) — одна позиция на пару «модель+размер»;
-• CHECK(quantity >= 0), CHECK(price >= 0), CHECK(quantity > 0) в строках;
-• ON DELETE CASCADE для order_items при удалении заказа;
-• ON DELETE RESTRICT для товарной позиции, которая уже есть в заказе.
+СОБЫТИЕ ОТПРАВКИ
 
-Вход только по логину: users.login, поле password НЕ нужно.
+form.addEventListener('submit', (event) => {
+  let ok = true;
+  if (!/^[A-Za-z0-9]{6,}$/.test(login.value.trim())) {
+    error.textContent = 'Логин: латиница и цифры, минимум 6 символов';
+    ok = false;
+  } else {
+    error.textContent = '';
+  }
+  if (!ok) event.preventDefault();
+});
+
+РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ ЭКЗАМЕНА
+
+const LOGIN_RE = /^[A-Za-z0-9]{6,}$/;
+const FIO_RE = /^[А-Яа-яЁё\\s-]+$/;
+const PHONE_RE = /^8\\(\\d{3}\\)\\d{3}-\\d{2}-\\d{2}$/;
+const EMAIL_RE = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+
+СООБЩЕНИЯ
+• ошибка — под конкретным полем, а не одним alert;
+• цвет + текст, не только цвет;
+• после исправления ошибка исчезает;
+• серверная валидация всё равно обязательна: клиентскую легко обойти.
+
+ПОЛЕЗНО
+element.classList.toggle('is-error', !ok);
+element.setAttribute('aria-invalid', String(!ok));
 """),
-    ("l06", "БД", "3НФ, ключи и ER-диаграмма", 10, """
-1НФ — атомарные значения, нет повторяющихся групп.
-  Плохо: sizes = '36,37,38' в одной ячейке.
-  Хорошо: таблица sizes + product_items.
+    ("l06", "JavaScript", "Слайдер 4 изображения / 3 секунды", 12, """
+ТРЕБОВАНИЕ КОД 2026
+Слайдер автоматически сменяет 4 изображения одинакового размера
+с интервалом 3 секунды, имеет кнопки «назад/вперёд» и вписан в дизайн.
 
-2НФ — неключевой атрибут зависит от ВСЕГО ключа.
-  В product_items ключ (product_id, size_id), количество зависит от пары.
+РАЗМЕТКА
 
-3НФ — нет транзитивных зависимостей.
-  Плохо: products(..., category_name, manufacturer_address).
-  Хорошо: categories отдельно, производитель — атрибут товара, пока у него
-  нет собственных сущностей.
+<div class="slider" data-slider>
+  <button class="slider__btn" data-prev aria-label="Назад">‹</button>
+  <img class="slider__img" src="/static/img/slide-1.svg" alt="Курс 1">
+  <button class="slider__btn" data-next aria-label="Вперёд">›</button>
+  <div class="slider__dots"></div>
+</div>
 
-ER-диаграмма (PDF) должна содержать:
-• 8 таблиц и все атрибуты;
-• PK и FK;
-• связи 1:M со стороны «один»;
-• согласованные имена (snake_case, *_id).
+JS
 
-Инструменты: draw.io, DBeaver, SSMS, dbdiagram.io. На экзамене интернет
-ограничен — ставь draw.io desktop заранее.
+const root = document.querySelector('[data-slider]');
+const img = root.querySelector('.slider__img');
+const slides = [
+  '/static/img/slide-1.svg',
+  '/static/img/slide-2.svg',
+  '/static/img/slide-3.svg',
+  '/static/img/slide-4.svg',
+];
+let index = 0;
+let timer = null;
+
+function show(i) {
+  index = (i + slides.length) % slides.length;
+  img.src = slides[index];
+  img.alt = `Курс ${index + 1}`;
+}
+function start() {
+  stop();
+  timer = setInterval(() => show(index + 1), 3000);
+}
+function stop() { if (timer) clearInterval(timer); timer = null; }
+
+root.querySelector('[data-prev]').addEventListener('click', () => { show(index - 1); start(); });
+root.querySelector('[data-next]').addEventListener('click', () => { show(index + 1); start(); });
+root.addEventListener('mouseenter', stop);
+root.addEventListener('mouseleave', start);
+start();
+
+ПРОВЕРКА
+• 4 изображения одного размера (object-fit: cover);
+• смена ровно через 3 секунды;
+• кнопки работают и сбрасывают таймер;
+• на мобильном слайдер не ломает сетку;
+• при prefers-reduced-motion автопрокрутку можно отключить.
 """),
-    ("l07", "Документы", "Блок-схема по ГОСТ 19.701-90", 8, """
-Задание 2: «Сформировать алгоритм работы системы оформления заказа обуви.
-Разработать алгоритм расчёта цены товара с учётом скидки. Алгоритмы
-реализовать в виде кода».
+    ("l07", "Git", "Git: репозиторий, коммиты, сдача", 10, """
+ПЕРВЫЙ РЕПОЗИТОРИЙ
 
-Символы: овал — начало/конец; прямоугольник — процесс; ромб — решение
-(выходы «Да»/«Нет»); параллелограмм — ввод/вывод; стрелки — поток.
+git init
+git add .
+git commit -m "feat: каркас проекта и схема БД"
+git branch -M main
+git remote add origin <url>
+git push -u origin main
 
-Алгоритм оформления заказа:
-Начало → Вход по логину → Проверить логин в БД
-  → Нет: сообщение → вернуться ко входу
-  → Да: каталог → Выбрать товар → Выбрать размер и количество
-  → Добавить в корзину → Подтвердить заказ?
-     Нет → вернуться в каталог
-     Да → Проверить остаток → Создать заказ → Списать остаток
-          → Обновить каталог → Конец
+ЕЖЕДНЕВНЫЙ ЦИКЛ
 
-Алгоритм цены:
-Начало → Взять цену → Есть заказы товара в прошлом месяце?
-  → Да: цена без скидки
-  → Нет: цена × 0,75
-→ Округлить до 2 знаков → Конец
+git status
+git diff
+git add app.py templates/ static/
+git commit -m "feat: регистрация и вход"
+git push
 
-Ошибки: нет «Начало/Конец», ромб без «Да/Нет», не PDF, алгоритм не про скидку.
+ЧТО ПРОВЕРЯЕТ ЭКСПЕРТ
+• исходники лежат папкой, а не одним архивом;
+• есть README.md с описанием и запуском;
+• есть скрипт БД (schema.sql) и данные;
+• коммиты в начале и конце каждого модуля;
+• нет venv/, __pycache__/, *.db, .env с секретами.
+
+.gitignore
+
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.DS_Store
+
+СООБЩЕНИЯ КОММИТОВ
+feat: ... — новая функциональность
+fix: ... — исправление
+docs: ... — документация
+style: ... — вёрстка/оформление
+refactor: ... — переработка кода
+
+ЕСЛИ ЗАБЫЛ ЗАКОММИТИТЬ
+Недосданный файл = 0 баллов за критерий. Коммить после каждого
+законченного сценария, а не один раз в конце.
 """),
-    ("l08", "SQL", "SELECT, WHERE, ORDER BY, LIKE", 9, """
-SELECT p.product_id, p.name, c.category_name, p.price
-FROM products p
-JOIN categories c ON p.category_id = c.category_id
-WHERE p.price > 3000
-ORDER BY p.price DESC;
+    ("l08", "Flask", "Flask: маршруты, шаблоны, статика", 12, """
+УСТАНОВКА
 
-Поиск по наименованию И описанию (Задание 3):
-WHERE p.name LIKE '%Кросс%' OR p.description LIKE '%Кросс%'
+python -m venv venv
+# Windows: venv\\Scripts\\activate
+# macOS/Linux: source venv/bin/activate
+pip install flask
+pip freeze > requirements.txt
 
-ВАЖНО: lower() в SQLite не понижает регистр кириллицы. Для поиска без учёта
-регистра делайте это в Python: 'кросс' in text.lower().
+МИНИМАЛЬНОЕ ПРИЛОЖЕНИЕ
 
-NULL: image_path IS NULL → подставить 'picture.png' через COALESCE.
+from flask import Flask, render_template, request, redirect, url_for
 
-Сортировка по цене: ORDER BY price ASC / DESC — это выпадающий список
-«По цене ↑ / По цене ↓» в Задании 3.
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'change-me'
+
+@app.get('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/applications/new', methods=['GET', 'POST'])
+def new_application():
+    if request.method == 'POST':
+        course_id = request.form.get('course_id')
+        # валидация и запись в БД
+        return redirect(url_for('dashboard'))
+    return render_template('application_new.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+СТРУКТУРА
+
+project/
+  app.py
+  db.py
+  schema.sql
+  requirements.txt
+  templates/
+    base.html
+    index.html
+    register.html
+    login.html
+    dashboard.html
+    admin.html
+  static/
+    css/style.css
+    js/app.js
+    img/
+
+JINJA2
+
+{% extends 'base.html' %}
+{% block content %}
+  <h1>{{ course.title }}</h1>
+  {% for course in courses %}
+    <article class="course-card">{{ course.title }}</article>
+  {% endfor %}
+{% endblock %}
+
+{{ ... }} экранирует HTML автоматически — это защита от XSS.
 """),
-    ("l09", "SQL", "JOIN, GROUP BY, CASE, даты", 12, """
--- Остаток по модели и «много/мало» (Задание 2)
-SELECT p.product_id, p.name, COALESCE(SUM(pi.quantity), 0) AS total,
-       CASE WHEN COALESCE(SUM(pi.quantity), 0) > 5
-            THEN 'много' ELSE 'мало' END AS label
-FROM products p
-LEFT JOIN product_items pi ON pi.product_id = p.product_id
-GROUP BY p.product_id, p.name;
+    ("l09", "Flask", "Формы, сессии, flash и PRG", 12, """
+ПОЛУЧЕНИЕ ДАННЫХ
 
--- Подсветка: остаток ≤ 3
-HAVING COALESCE(SUM(pi.quantity), 0) <= 3
+login = request.form.get('login', '').strip()
+password = request.form.get('password', '')
+course_id = request.form.get('course_id', type=int)
 
--- Скидка 25% товарам без заказов в прошлом календарном месяце
-CASE WHEN NOT EXISTS (
-    SELECT 1
-    FROM orders o
-    JOIN order_items oi ON oi.order_id = o.order_id
-    JOIN product_items pi ON pi.item_id = oi.item_id
-    WHERE pi.product_id = p.product_id
-      AND o.order_date >= date('now','start of month','-1 month')
-      AND o.order_date <  date('now','start of month')
-) THEN ROUND(p.price * 0.75, 2)
-  ELSE p.price
-END AS final_price
+ПОСЛЕ POST — REDIRECT (PRG)
+redirect после успешной записи защищает от повторной отправки формы
+при обновлении страницы.
 
--- Итог заказа
-SUM(oi.quantity * oi.unit_price)
+return redirect(url_for('dashboard'))
 
--- Статистика (Задание 5)
-SELECT COUNT(*) AS orders_count,
-       COALESCE(SUM(total), 0) AS revenue,
-       ROUND(COALESCE(SUM(total), 0) / COUNT(*), 2) AS avg_check
-FROM (
-    SELECT o.order_id, SUM(oi.quantity * oi.unit_price) AS total
-    FROM orders o
-    LEFT JOIN order_items oi ON oi.order_id = o.order_id
-    GROUP BY o.order_id
-);
+СЕССИЯ
+
+from flask import session
+
+session['user_id'] = user['user_id']
+session['role_id'] = user['role_id']
+session.clear()          # выход
+
+app.config['SECRET_KEY'] — обязателен, иначе сессия не работает.
+Cookie: HttpOnly, SameSite=Lax, Secure при HTTPS.
+
+FLASH-СООБЩЕНИЯ
+
+flash('Заявка создана', 'success')
+flash('Неверный логин или пароль', 'error')
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div class="alert alert--{{ category }}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+
+ЗАЩИТА МАРШРУТОВ
+
+def login_required(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Сначала войдите', 'error')
+            return redirect(url_for('login'))
+        return view(*args, **kwargs)
+    return wrapper
+
+ОШИБКИ ВАЛИДАЦИИ
+Сохраняй введённые значения и показывай ошибки под полями,
+а не переводи пользователя на пустую форму.
 """),
-    ("l10", "SQL", "DDL, INSERT/UPDATE/DELETE, скрипт БД", 9, """
-CREATE TABLE product_items (
-    item_id   INTEGER PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
-    size_id   INTEGER NOT NULL REFERENCES sizes(size_id) ON DELETE RESTRICT,
-    quantity  INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    UNIQUE (product_id, size_id)
-);
+    ("l10", "SQL", "SQL: SELECT, JOIN, GROUP BY, даты", 12, """
+ВЫБОРКА
 
-INSERT INTO users (last_name, first_name, middle_name, login, role_id)
-VALUES ('Новиков', 'Олег', 'Игоревич', 'onovikov', 3);
+SELECT application_id, start_date, payment_method
+FROM applications
+WHERE status_id = 1
+ORDER BY start_date
+LIMIT 10;
 
-UPDATE orders SET order_date = ? WHERE order_id = ?;
+ПОИСК
 
-DELETE FROM order_items WHERE order_item_id = ?;
+SELECT user_id, full_name, phone
+FROM users
+WHERE full_name LIKE '%Иван%'
+   OR phone LIKE '8(921)%'
+ORDER BY full_name;
 
-Правила:
-• PRAGMA foreign_keys = ON — в SQLite по умолчанию ВЫКЛЮЧЕНО;
-• после INSERT/UPDATE/DELETE — commit();
-• скрипт БД сдаётся С ДАННЫМИ: DDL + INSERT + ограничения;
-• ID новой записи: cursor.lastrowid (SQLite) / SCOPE_IDENTITY() (SQL Server).
+JOIN
 
-Динамические даты для демо-данных:
-INSERT INTO orders (order_date, user_id)
-VALUES (date('now','start of month','-1 month','+3 days'), 4);
+SELECT a.application_id, u.full_name, c.title, s.status_name
+FROM applications a
+JOIN users u ON u.user_id = a.user_id
+JOIN courses c ON c.course_id = a.course_id
+JOIN application_statuses s ON s.status_id = a.status_id
+ORDER BY a.application_id;
+
+АГРЕГАТЫ
+
+SELECT c.title, COUNT(*) AS applications_count
+FROM applications a
+JOIN courses c ON c.course_id = a.course_id
+GROUP BY c.course_id, c.title
+HAVING COUNT(*) > 1
+ORDER BY applications_count DESC;
+
+ДАТЫ
+
+SELECT date('now');
+SELECT strftime('%Y-%m', created_at) AS month, COUNT(*)
+FROM applications
+GROUP BY month
+ORDER BY month;
+
+CASE
+
+SELECT application_id,
+       CASE WHEN status_id = 3 THEN 'завершено' ELSE 'в работе' END AS state
+FROM applications;
+
+ПАРАМЕТРЫ — ТОЛЬКО ТАК
+
+cur.execute('SELECT * FROM users WHERE login = ?', (login,))
+
+Никогда не склеивай SQL строками: это SQL-инъекция.
 """),
-    ("l11", "Python", "Python + SQLite: рабочий каркас", 10, """
-import sqlite3
-from pathlib import Path
+    ("l11", "БД", "БД «Корочки.есть»: 6 таблиц и 3НФ", 12, """
+СУЩНОСТИ
+• roles — роли (администратор, пользователь);
+• users — пользователи: логин, хеш пароля, ФИО, телефон, email, роль;
+• courses — курсы: название, описание, длительность, цена;
+• application_statuses — справочник статусов;
+• applications — заявки: пользователь, курс, дата начала, оплата, статус;
+• reviews — отзывы: заявка, пользователь, оценка 1–5, текст.
 
-DB = Path(__file__).with_name('chudo_obuv.db')
-conn = sqlite3.connect(DB)
-conn.execute('PRAGMA foreign_keys = ON')
-cur = conn.cursor()
+СВЯЗИ
+users 1:M applications
+courses 1:M applications
+application_statuses 1:M applications
+applications 1:1 reviews
+users 1:M reviews
 
-cur.execute('''
-    SELECT p.product_id, p.name, p.price, c.category_name
-    FROM products p
-    JOIN categories c ON p.category_id = c.category_id
-    ORDER BY p.product_id
-''')
-for pid, name, price, category in cur.fetchall():
-    print(pid, name, price, category)
+ПОЧЕМУ 3НФ
+• 1НФ — атомарные значения, нет списков в ячейке;
+• 2НФ — нет зависимости части ключа от неключа;
+• 3НФ — нет транзитивных зависимостей: статус и курс вынесены
+  в справочники, а не хранятся текстом в заявке.
 
-# Параметризованный запрос — только так!
-cur.execute('SELECT user_id, last_name, first_name, role_id FROM users WHERE login = ?',
-            (login,))
-user = cur.fetchone()
+ОГРАНИЧЕНИЯ
+• users.login UNIQUE;
+• applications.payment_method CHECK IN ('cash','phone_transfer');
+• reviews.rating CHECK BETWEEN 1 AND 5;
+• reviews.application_id UNIQUE — один отзыв на заявку;
+• FK с ON DELETE CASCADE/RESTRICT.
 
-# Запись
-cur.execute('INSERT INTO orders (order_date, user_id) VALUES (date("now"), ?)', (user[0],))
-order_id = cur.lastrowid
-cur.execute('INSERT INTO order_items (order_id, item_id, quantity, unit_price) '
-            'VALUES (?, ?, ?, ?)', (order_id, item_id, qty, price))
-cur.execute('UPDATE product_items SET quantity = quantity - ? WHERE item_id = ?',
-            (qty, item_id))
-conn.commit()
+ER-ДИАГРАММА
+Нарисуй 6 прямоугольников, атрибуты, PK/FK и линии связей.
+Подпиши кардинальности 1 и M. Сохрани в PDF/PNG и приложи к README.
 
-Транзакция важна: заказ, строки и списание остатка должны сохраниться вместе.
-Если что-то упало — conn.rollback().
+СКРИПТ БД
+schema.sql должен содержать CREATE TABLE + INSERT с демо-данными,
+чтобы эксперт мог поднять базу одной командой.
 """),
-    ("l12", "UI", "tkinter: экраны, таблица, события", 10, """
-root = tk.Tk()
-root.title('Чудо Обувь — каталог')
+    ("l12", "Безопасность", "Регистрация, вход, роли, защита", 14, """
+РЕГИСТРАЦИЯ — ПРОВЕРКИ НА СЕРВЕРЕ
+• логин: ^[A-Za-z0-9]{6,}$, проверить уникальность;
+• пароль: не короче 8 символов;
+• ФИО: кириллица и пробелы;
+• телефон: 8(XXX)XXX-XX-XX;
+• email: формат почты + уникальность;
+• все поля обязательны.
 
-search_var = tk.StringVar()
-ttk.Entry(parent, textvariable=search_var).pack(fill='x')
-search_var.trace_add('write', lambda *_: refresh())   # поиск в реальном времени
+ХЕШИРОВАНИЕ
 
-table = ttk.Treeview(parent, columns=('name', 'price', 'stock'), show='headings')
-for col, title in zip(('name', 'price', 'stock'),
-                      ('Наименование', 'Цена', 'Остаток')):
-    table.heading(col, text=title)
-table.pack(fill='both', expand=True)
+from werkzeug.security import generate_password_hash, check_password_hash
 
-table.tag_configure('low_stock', background='#FFB6B6')   # светло-красный
-table.tag_configure('discount', foreground='#c0392b')
+password_hash = generate_password_hash(password)
+# при входе:
+if user and check_password_hash(user['password_hash'], password):
+    session['user_id'] = user['user_id']
 
-def refresh():
-    table.delete(*table.get_children())
-    for row in load_products(search_var.get(), category_var.get(), sort_var.get()):
-        tag = 'low_stock' if row['total'] <= 3 else ''
-        table.insert('', 'end',
-                     values=(row['name'], row['final_price'], row['label']),
-                     tags=(tag,))
+Никогда не храни пароль в открытом виде.
 
-Экраны: LoginFrame, CatalogFrame, ProductFrame, CartFrame, OrdersFrame,
-OrderViewFrame, StatisticsFrame. Все лежат в одном контейнере grid и
-переключаются через frame.tkraise(). У каждого — свой заголовок окна.
+РОЛИ
+role_id = 1 — администратор, 2 — пользователь.
+Админ-маршруты проверяют и сессию, и роль:
+
+if session.get('role_id') != 1:
+    abort(403)
+
+ДОСТУП АДМИНИСТРАТОРА
+Логин Admin, пароль KorokNET — создать при инициализации БД.
+Прямой заход на /admin без входа должен перенаправлять на вход
+или отдавать 403, а не показывать данные.
+
+SQL-ИНЪЕКЦИИ
+Плохо:  f"SELECT * FROM users WHERE login = '{login}'"
+Хорошо: cur.execute('SELECT * FROM users WHERE login = ?', (login,))
+
+XSS
+Jinja2 экранирует {{ }}. Не используй |safe для пользовательских данных.
+
+CSRF
+Для POST-форм добавляй скрытый токен, сравнивай его в сессии.
+SameSite=Lax на cookie — базовая дополнительная защита.
+
+ОШИБКИ
+Сообщение «Неверный логин или пароль» не раскрывает, что именно неверно.
+Не показывай traceback и пути к файлам в production (debug=False).
 """),
-    ("l13", "Экзамен", "Задания 2–3: каталог, скидка, заказ", 12, """
-ЗАДАНИЕ 2 (10 баллов, 40 мин)
-• алгоритм оформления заказа + алгоритм цены со скидкой (блок-схема PDF);
-• название приложения с названием компании, стиль, логотип, иконка;
-• каталог: изображение (или picture.png), категория, наименование,
-  производство, состав, цена со скидкой, «много/мало»;
-• подсветка светло-красным при остатке ≤ 3;
-• скидка 25% товарам без заказов в прошлом календарном месяце;
-• отладка: нет аварийных завершений.
+    ("l13", "Flask", "Заявки, статусы, отзывы, админка", 14, """
+СОЗДАНИЕ ЗАЯВКИ
+1. Пользователь выбирает курс из выпадающего списка.
+2. Указывает дату начала в формате ДД.ММ.ГГГГ.
+3. Выбирает оплату: наличными или переводом по номеру телефона.
+4. Сервер проверяет поля и пишет заявку со статусом «Новая».
 
-ЗАДАНИЕ 3 (25 баллов, 60 мин)
-• вход ТОЛЬКО по логину (без пароля) + «Без входа» для гостя;
-• ФИО в правом верхнем углу, выход;
-• навигация, «Назад», заголовок каждого окна;
-• обработка ошибок: заголовок, пиктограмма, что делать; валидация полей;
-• сортировка по цене ↑↓ (выпадающий список);
-• фильтр по категории, первый пункт «Все категории» (сбрасывает фильтр);
-• поиск по наименованию и описанию;
-• всё в реальном времени, поиск+фильтр+сортировка совместно;
-• карточка товара: изображение, производство, наименование, категория,
-  цена со скидкой, состав, описание, размерный ряд, доступные размеры;
-• выбор размера и количества, добавление позиций, подтверждение заказа,
-  дата заказа, списание остатка, обновление каталога.
+СПИСОК ЗАЯВОК ПОЛЬЗОВАТЕЛЯ
+SELECT a.application_id, c.title, a.start_date, a.payment_method,
+       s.status_name, a.cancel_reason
+FROM applications a
+JOIN courses c ON c.course_id = a.course_id
+JOIN application_statuses s ON s.status_id = a.status_id
+WHERE a.user_id = ?
+ORDER BY a.created_at DESC;
 
-Гость видит каталог без поиска/сортировки/фильтра.
+СТАТУСЫ
+1 «Новая» → 2 «Идет обучение» → 3 «Обучение завершено».
+4 «Отменена» — дополнительная функция из КОД 2025 (с причиной); в КОД 2026 не требуется.
+Администратор меняет статус через POST и видит flash-подтверждение.
+
+ОТЗЫВ
+Кнопка «Оставить отзыв» доступна только для заявки со статусом
+«Обучение завершено» и только один раз.
+Оценка 1–5 + текст. После сохранения отзыв виден в карточке курса
+или в личном кабинете.
+
+АДМИН-ПАНЕЛЬ
+• таблица всех заявок: ФИО, телефон, курс, дата, оплата, статус;
+• фильтр по статусу;
+• поиск по ФИО и названию курса;
+• сортировка по дате;
+• пагинация по 5–10 записей;
+• пустое состояние «Заявок не найдено».
+
+ПРОВЕРКА ПРАВ
+Каждый POST в админке проверяет роль. Нельзя менять статус
+через прямой запрос, если пользователь не администратор.
 """),
-    ("l14", "Экзамен", "Задания 4–5: заказы, статистика, документы", 12, """
-ЗАДАНИЕ 4 (25 баллов, 60 мин)
-• у Менеджера и Администратора — список заказов: дата, ФИО клиента;
-• добавить заказ: выбрать товар из каталога с поиском по наименованию,
-  выбрать размер и количество;
-• состав заказа: товар (наименование + производство), размер, количество,
-  цена за единицу, итоговая сумма;
-• удалить позицию, добавить новую;
-• Администратор: изменить дату заказа, удалить позиции;
-• после изменений — обновить список;
-• git-репозиторий + README.md с описанием функциональности.
+    ("l14", "Дизайн", "Дизайн, адаптив, анимации, документы", 12, """
+МОДУЛЬ 2 — ЭТО НЕ ТОЛЬКО КРАСИВО
+Эксперт смотрит: корпоративный стиль, требования к дизайну,
+современные тенденции. Сделай мини-дизайн-систему.
 
-ЗАДАНИЕ 5 (25 баллов, 30 мин)
-• кнопка «Статистика» у Менеджера и Администратора;
-• таблица всех заказов: номер, дата, ФИО клиента, итоговая сумма;
-• 3 показателя: количество заказов, выручка, средний (или максимальный) чек;
-• Руководство_пользователя.docx/.pdf, 1–2 страницы, 3+ скриншота:
-  назначение и вход; каталог; заказы; статистика;
-• загрузить код, скрипт БД и руководство в репозиторий.
+ПАЛИТРА И ТИПОГРАФИКА
+• 1 основной цвет, 1 акцент, нейтральные оттенки;
+• шрифт system-ui или один подключённый;
+• размеры 14/16/20/28/36, межстрочный 1.4–1.6;
+• отступы 4/8/12/16/24/32.
 
-Тайминг: 50 / 40 / 60 / 60 / 30 минут. За 5 минут до конца задания —
-сохранить и загрузить файлы. Недосданный файл = 0 баллов за критерий.
+КОМПОНЕНТЫ
+кнопка (primary/secondary/danger), поле (обычное/фокус/ошибка),
+карточка курса, бейдж статуса, alert, пагинация, пустое состояние.
+
+АДАПТИВ 390×844
+Проверь: меню, формы, таблицу заявок, админку, слайдер.
+Ничего не должно вылезать за экран.
+
+СЛАЙДЕР
+4 изображения одного размера, автопереключение 3 секунды,
+кнопки назад/вперёд, пауза при наведении.
+
+АНИМАЦИИ
+• появление карточек: opacity + translateY 8–12 px;
+• hover кнопок: смена цвета и лёгкий подъём;
+• flash: плавное появление;
+• skeleton при загрузке;
+• @media (prefers-reduced-motion: reduce) — отключить автодвижение.
+
+ДОКУМЕНТЫ
+• README.md: назначение, стек, запуск, структура, схема БД;
+• ER-диаграмма;
+• Руководство_пользователя: 1–2 страницы, 4+ скриншота
+  (регистрация, заявка, личный кабинет, админка);
+• скриншоты мобильной версии 390×844.
+
+МОДУЛЬ 3
+Собери всё вместе, добавь оптимизацию: индексы, отсутствие N+1,
+LIMIT, кэш, сжатые изображения, аккуратные коммиты.
 """),
-    ("l15", "Экзамен", "Стратегия: с нуля до 5 из 5", 10, """
-ЦЕЛЬ «5»: ≥90% (90+ из 100). Это значит, что нельзя «забыть» целое задание:
-все 5 заданий должны быть сделаны, а мелочи — закрыты.
+    ("l15", "Экзамен", "Стратегия: тайминг и 100 баллов", 12, """
+ЦЕЛЬ «5» — 90+ из 100. Нельзя «потерять» целый модуль.
 
-Порядок освоения:
-1. Python-минимум (3 недели): переменные, условия, циклы, списки, словари,
-   функции, файлы, исключения.
-2. SQL (2 недели): SELECT, JOIN, GROUP BY, CASE, даты, подзапросы.
-3. БД (1 неделя): 8 таблиц, 3НФ, ER, DDL, импорт.
-4. tkinter (1 неделя): окна, Treeview, события, сообщения.
-5. Задание 2 (1 неделя): каталог, «много/мало», подсветка, скидка 25%.
-6. Задание 3 (1 неделя): вход по логину, фильтры, карточка, корзина, заказ.
-7. Задания 4–5 (1 неделя): заказы, состав, статистика, руководство.
-8. Пробники (1 неделя): три прогона с таймером и разбор ошибок.
+ТАЙМИНГ
+• 1:30 — Модуль 1: БД, регистрация, вход, заявки, статусы, git.
+• 1:30 — Модуль 2: дизайн, адаптив 390×844, слайдер, анимации.
+• 1:00 — Модуль 3: интеграция, админка, оптимизация, финальный коммит.
 
-Принципы:
-• один рабочий каркас, доведённый до автоматизма, а не импровизация;
-• сначала «дорогие» задания: 3 и 4 по 25 баллов, 5 — ещё 25;
-• чек-лист на 100 баллов перед каждым пробником;
-• сохранять и заливать в git каждые 10–15 минут;
-• мелочи (ФИО, «Все категории», «Назад», заголовки, подсветка, скидка)
-  стоят десятки баллов — их нельзя оставлять «на потом».
+ПОРЯДОК РАБОТЫ
+1. Создай репозиторий и коммит «start» в первые 2 минуты.
+2. Подними БД и минимальный каркас.
+3. Сделай вертикальный срез: регистрация → вход → заявка → админка.
+4. Только потом красота и дополнительные функции.
+5. В конце каждого модуля — commit + push.
+
+ЧЕК-ЛИСТ ПЕРЕД СДАЧЕЙ
+• Все страницы открываются без 500.
+• Регистрация: ошибки на форме, уникальный логин.
+• Вход/выход, прямой заход в /admin запрещён.
+• Заявка создаётся, видна в кабинете и админке.
+• Статусы меняются; отмена — дополнительно, в КОД 2026 не требуется.
+• Отзыв только после завершения.
+• Мобильная версия 390×844 без горизонтального скролла.
+• Слайдер: 4 изображения, 3 секунды, кнопки.
+• README, schema.sql, ER, руководство, скриншоты.
+• Нет venv, *.db, паролей и мусора в репозитории.
+
+ТИПИЧНЫЕ ПОТЕРИ БАЛЛОВ
+• пароль хранится открытым текстом;
+• нет серверной валидации;
+• админка доступна по прямой ссылке;
+• слайдер не 3 секунды или не 4 изображения;
+• нет мобильной версии;
+• один коммит в конце;
+• нет README/руководства.
+
+ЕСЛИ НЕ УСПЕВАЕШЬ
+Сначала закрой дешёвые и обязательные критерии: валидация, роли,
+заявки, статусы, адаптив, git. Красивые анимации — в конце.
 """),
 ]
 
@@ -776,320 +973,364 @@ def q(text, opts, ans, expl, topic):
 
 
 QUIZ = [
-    q("Сколько заданий и баллов на ДЭ-2027 (профильный уровень)?",
-      ["4 задания / 75", "5 заданий / 100", "3 задания / 50", "5 заданий / 75"], 1,
-      "5 заданий, 100 баллов: 15 + 10 + 25 + 25 + 25.", "Экзамен"),
-    q("Сколько времени даётся на все задания?",
-      ["3 ч", "4 ч", "5 ч", "1 ч 30 мин"], 1,
-      "50 + 40 + 60 + 60 + 30 = 240 минут = 4 часа.", "Экзамен"),
-    q("Сколько баллов даёт Задание 1 (БД)?",
-      ["10", "15", "25", "30"], 1, "Задание 1 — 15 баллов, 50 минут.", "Экзамен"),
-    q("Сколько таблиц должно быть в БД «Чудо Обувь»?",
-      ["5", "6", "8", "11"], 2,
-      "8: роли, категории, размеры, пользователи, товары, товарные позиции, заказы, строки заказов.", "БД"),
-    q("Как входят в систему по КИМ-2027?",
-      ["Логин и пароль", "Только по логину", "По email", "По номеру телефона"], 1,
-      "«Вход в систему следует производить только по логину... Пароль при этом вводить не требуется».", "Экзамен"),
-    q("Какой остаток считается «много»?",
-      ["Больше 3", "Больше 5", "5 и меньше", "Ровно 5"], 1,
-      "«много» — суммарно больше 5 пар по всем размерам, иначе «мало».", "Экзамен"),
-    q("При каком остатке строку подсвечивают светло-красным?",
-      ["≤ 3", "≤ 5", "= 0", "> 5"], 0, "«...количество которых суммарно по всем размерам меньше или равно трем».", "Экзамен"),
-    q("Кому даётся скидка 25% в Задании 2?",
-      ["Всем товарам", "Товарам без заказов в прошлом календарном месяце", "Товарам с остатком 0", "Товарам дороже 5000"], 1,
-      "Скидка 25% — товарам, по которым отсутствуют заказы в предыдущем календарном месяце.", "Экзамен"),
-    q("Что такое товарная позиция?",
-      ["Модель", "Модель + размер", "Заказ", "Категория"], 1,
-      "Товарная позиция — сочетание модели и размера, у неё свой остаток.", "БД"),
-    q("Где хранится итоговая сумма заказа?",
-      ["В orders.total", "В products.price", "Считается из строк заказа", "В users"], 2,
-      "Сумма = SUM(order_items.quantity * order_items.unit_price), отдельно не хранится.", "БД"),
-    q("Первый пункт фильтра по категории?",
-      ["«Без фильтра»", "«Все категории»", "«Сбросить»", "Пусто"], 1,
-      "«Все категории» — при выборе фильтр отключается.", "Экзамен"),
-    q("По каким полям идёт поиск в Задании 3?",
-      ["Только по названию", "По наименованию и описанию", "По цене", "По логину"], 1,
-      "«Поиск должен осуществляться по наименованию и описанию товара».", "Экзамен"),
-    q("Что должно быть в правом верхнем углу после входа?",
-      ["Логин", "ФИО", "Роль", "Дата"], 1,
-      "ФИО пользователя (фамилия, имя, отчество).", "Экзамен"),
-    q("Кто может менять дату заказа и удалять позиции?",
-      ["Гость", "Пользователь", "Менеджер", "Администратор"], 3,
-      "Редактирование заказа (дата, удаление позиций) — только Администратор.", "Экзамен"),
-    q("Что входит в Задание 5?",
-      ["Только статистика", "Статистика + руководство пользователя", "Только ER", "Только тесты"], 1,
-      "Окно «Статистика заказов» + Руководство_пользователя.docx (1–2 стр., 3+ скриншота).", "Экзамен"),
-    q("Сколько показателей должно быть в окне статистики?",
-      ["1", "2", "3", "4"], 2,
-      "Количество заказов, общая выручка, средний (или максимальный) чек.", "Экзамен"),
-    q("Что обязательно должно быть в git-репозитории?",
-      ["Только архив", "Исходники папкой + скрипт БД + README.md", "Только exe", "Только скриншоты"], 1,
-      "Исходный код структурой файлов (не архив), исполняемые файлы, скрипт БД, README.md, документы.", "Экзамен"),
-    q("Стиль именования для Python?",
-      ["CamelCase", "snake_case", "UPPER_CASE", "kebab-case"], 1,
-      "CamelCase — C#/Java, snake_case — Python, стандарт ИТС — 1С.", "Экзамен"),
-    q("Сколько команд допустимо в одной строке?",
-      ["Сколько угодно", "Одну", "Две", "Три"], 1, "«Допустимо использование не более одной команды в строке».", "Экзамен"),
-    q("Что означает 3НФ?",
-      ["Атомарность полей", "Зависимость от всего ключа", "Отсутствие транзитивных зависимостей", "Наличие FK"], 2,
-      "3НФ = 2НФ + неключевые атрибуты не зависят от других неключевых.", "БД"),
-    q("Что обеспечивает внешний ключ?",
-      ["Скорость", "Ссылочную целостность", "Уникальность", "Шифрование"], 1,
-      "Нельзя сослаться на несуществующую запись. В SQLite включается PRAGMA foreign_keys=ON.", "БД"),
-    q("Как в SQLite включить проверку внешних ключей?",
-      ["Всегда включено", "PRAGMA foreign_keys = ON", "SET FK=1", "Невозможно"], 1,
-      "По умолчанию выключено — частая потеря баллов.", "БД"),
-    q("Как реализовать связь «заказ — товары»?",
-      ["Столбцом в orders", "Через order_items", "Через строку с запятыми", "Через JSON"], 1,
-      "Одна строка заказа = одна товарная позиция + количество + цена.", "БД"),
-    q("Как получить суммарный остаток модели по размерам?",
-      ["SUM(quantity) с GROUP BY product_id", "COUNT(*)", "MAX(price)", "AVG(quantity)"], 0,
-      "LEFT JOIN product_items + SUM(quantity) + GROUP BY product_id.", "SQL"),
-    q("Как посчитать «много/мало» в SQL?",
-      ["IF()", "CASE WHEN SUM(quantity) > 5 THEN 'много' ELSE 'мало' END", "ROUND()", "LIKE"], 1,
-      "CASE — стандартный способ условного значения.", "SQL"),
-    q("Как проверить, что у товара не было заказов в прошлом месяце?",
-      ["NOT EXISTS (SELECT 1 FROM orders ...)", "COUNT(*) = 0 в Python", "WHERE price = NULL", "LIKE '%нет%'"], 0,
-      "NOT EXISTS + диапазон дат прошлого календарного месяца.", "SQL"),
-    q("Как получить первый день прошлого месяца в SQLite?",
-      ["date('now','-30 days')", "date('now','start of month','-1 month')", "date('now','-1 month')", "EOMONTH()"], 1,
-      "Точная граница месяца — start of month, -1 month.", "SQL"),
-    q("Как вычислить итог заказа?",
-      ["SUM(quantity * unit_price)", "SUM(price)", "COUNT(*)", "MAX(unit_price)"], 0,
-      "Сумма по строкам заказа: количество × цена за единицу.", "SQL"),
-    q("Как посчитать средний чек?",
-      ["SUM(total) / COUNT(*)", "AVG(price)", "SUM(quantity)", "MAX(total)"], 0,
-      "Выручка ÷ количество заказов. Учитывайте деление на ноль.", "SQL"),
-    q("Что вернёт lower('КРОССОВКИ') в SQLite?",
-      ["'кроссовки'", "'КРОССОВКИ'", "Ошибку", "NULL"], 1,
-      "lower() работает только с ASCII; для кириллицы регистр не меняется.", "SQL"),
-    q("Как проверить отсутствие картинки?",
-      ["image_path = NULL", "image_path IS NULL", "image_path == ''", "NOT image_path"], 1,
-      "NULL сравнивается только через IS NULL.", "SQL"),
-    q("Что делает LEFT JOIN в списке заказов?",
-      ["Убирает заказы без позиций", "Оставляет заказы даже без позиций", "Сортирует", "Удаляет дубли"], 1,
-      "LEFT JOIN сохраняет все заказы; у заказа без позиций сумма будет NULL/0.", "SQL"),
-    q("Что делает commit()?",
-      ["Закрывает окно", "Сохраняет изменения", "Создаёт таблицу", "Удаляет БД"], 1,
-      "Без commit() INSERT/UPDATE/DELETE теряются.", "Python"),
+    q("Какой КОД взят за основу курса?",
+      ["09.02.07-2-2026 (Программист)", "09.02.07-3-2026 (веб)", "09.02.07-1-2025 (БД)", "09.02.07-5-2026"],
+      1, "Последний завершённый экзамен для веб-квалификации — КОД 09.02.07-3-2026.", "Экзамен"),
+    q("Сколько модулей на ДЭ веб-квалификации?",
+      ["2", "3", "4", "5"], 1, "Три модуля: информационные системы, дизайн, разработка и оптимизация.", "Экзамен"),
+    q("Сколько времени даётся на все модули?",
+      ["3 ч", "4 ч", "4 ч 30 мин", "5 ч"], 1, "1:30 + 1:30 + 1:00 = 4 часа.", "Экзамен"),
+    q("Как распределены баллы?",
+      ["50 + 50", "75 инвариант + 25 вариатив", "80 + 20", "100 инвариант"],
+      1, "Инвариантная часть — 75, вариативная — 25, всего 100.", "Экзамен"),
+    q("Сколько баллов даёт Модуль 1?",
+      ["20", "25", "30", "50"], 1, "Модуль 1 — 25 баллов: безопасность 18, модули 4, средства 3.", "Экзамен"),
+    q("Сколько времени на Модуль 2?",
+      ["1 ч", "1 ч 30 мин", "2 ч", "30 мин"], 1, "Модуль 2 — 1 час 30 минут.", "Экзамен"),
+    q("Предметная область образца 2026 года?",
+      ["«Чудо Обувь»", "«Корочки.есть»", "«Мой Не Сам»", "«СпортОпт»"],
+      1, "Портал онлайн-курсов «Корочки.есть».", "Экзамен"),
+    q("Логин и пароль администратора в образце 2026?",
+      ["admin / admin", "Admin / KorokNET", "adminka / password", "root / root"],
+      1, "В КОД 09.02.07-3-2026 — Admin / KorokNET.", "Экзамен"),
+
+    q("Зачем нужен <!DOCTYPE html>?",
+      ["Для стилей", "Включает стандартный режим браузера", "Подключает JS", "Задаёт кодировку"],
+      1, "Без DOCTYPE браузер может включить quirks mode.", "HTML"),
+    q("Какой meta-тег нужен для мобильной версии?",
+      ["charset", "viewport", "description", "refresh"], 1,
+      "meta name=viewport width=device-width, initial-scale=1.", "HTML"),
+    q("Семантический тег для навигации?",
+      ["<div>", "<nav>", "<menu>", "<aside>"], 1, "<nav> описывает блок навигации.", "HTML"),
+    q("Как связать label с полем ввода?",
+      ["name", "for + id", "class", "placeholder"], 1,
+      "Атрибут for у label совпадает с id поля.", "HTML"),
+    q("Какой type у поля телефона?",
+      ["text", "tel", "phone", "number"], 1, "type=tel даёт телефонную клавиатуру на мобильном.", "HTML"),
+    q("Зачем нужен alt у изображения?",
+      ["Для SEO", "Для доступности и случая, когда картинка не загрузилась", "Для стилей", "Для JS"],
+      1, "alt описывает изображение для скринридеров и при сбое загрузки.", "HTML"),
+
+    q("Что делает box-sizing: border-box?",
+      ["Добавляет рамку", "Включает padding и border в width", "Убирает margin", "Делает блок flex"],
+      1, "Ширина включает содержимое, padding и border — удобнее считать сетку.", "CSS"),
+    q("Какое свойство выравнивает по главной оси Flexbox?",
+      ["align-items", "justify-content", "gap", "flex-wrap"], 1,
+      "justify-content — главная ось, align-items — поперечная.", "CSS"),
+    q("Как задать три колонки Grid?",
+      ["grid: 3", "grid-template-columns: repeat(3, 1fr)", "columns: 3", "display: columns"],
+      1, "repeat(3, 1fr) создаёт три равные колонки.", "CSS"),
+    q("Mobile-first media query использует…",
+      ["max-width", "min-width", "only screen", "orientation"], 1,
+      "Сначала мобильные стили, затем расширяем через min-width.", "CSS"),
+    q("Как объявить CSS-переменную?",
+      ["$brand: #fff", "--brand: #fff", "var(--brand)", "@brand: #fff"], 1,
+      "Переменная объявляется как --brand, используется через var(--brand).", "CSS"),
+    q("Что важнее по специфичности?",
+      ["класс", "id", "тег", "universal"], 1, "id > класс > тег > *.", "CSS"),
+    q("Зачем нужен :focus-visible?",
+      ["Для мыши", "Для видимого фокуса с клавиатуры", "Для печати", "Для анимации"],
+      1, "Помогает сохранить доступность, не показывая рамку при клике мышью.", "CSS"),
+
+    q("Как найти элемент по id?",
+      ["document.getId", "document.querySelector('#id')", "document.byId", "document.find"],
+      1, "querySelector принимает CSS-селектор.", "JS"),
+    q("Как отменить стандартную отправку формы?",
+      ["event.stop()", "event.preventDefault()", "return false", "form.cancel()"],
+      1, "preventDefault останавливает переход и позволяет проверить поля.", "JS"),
+    q("Что делает setInterval(fn, 3000)?",
+      ["Вызывает fn один раз", "Вызывает fn каждые 3 секунды", "Ждёт 3 секунды", "Останавливает таймер"],
+      1, "Интервал 3000 мс = 3 секунды — то, что нужно слайдеру.", "JS"),
+    q("Как переключить класс элемента?",
+      ["element.class = ...", "classList.toggle('is-open')", "style.class", "setClass()"],
+      1, "classList.toggle добавляет или убирает класс.", "JS"),
+    q("Что возвращает fetch()?",
+      ["JSON", "Promise", "Строку", "Массив"], 1, "fetch возвращает Promise; далее response.json().", "JS"),
+
+    q("Какой декоратор задаёт маршрут во Flask?",
+      ["@app.router", "@app.route", "@route", "@get"], 1,
+      "Современный вариант: @app.get/post; классический — @app.route.", "Flask"),
+    q("Как вывести переменную в Jinja2?",
+      ["{ user }", "{{ user }}", "<%= user %>", "${user}"], 1,
+      "Двойные фигурные скобки, HTML экранируется автоматически.", "Flask"),
+    q("Как наследовать шаблон?",
+      ["{% include %}", "{% extends 'base.html' %}", "{% import %}", "{% block %}"],
+      1, "extends подключает базовый шаблон, block заполняет его части.", "Flask"),
+    q("Как получить поле формы?",
+      ["request.args", "request.form.get()", "request.json", "session.get()"], 1,
+      "request.form — данные POST-формы.", "Flask"),
+    q("Что обязательно для сессии Flask?",
+      ["DEBUG=True", "SECRET_KEY", "SQLALCHEMY", "CSRF"], 1,
+      "Без SECRET_KEY Flask не сможет подписать cookie сессии.", "Flask"),
+    q("Зачем redirect после успешного POST?",
+      ["Для красоты", "Чтобы обновление страницы не отправило форму повторно", "Для SEO", "Для кэша"],
+      1, "Паттерн Post/Redirect/Get.", "Flask"),
+
+    q("Что такое первичный ключ?",
+      ["Любой столбец", "Уникальный идентификатор строки", "Внешняя ссылка", "Индекс для поиска"],
+      1, "PRIMARY KEY уникален и не может быть NULL.", "SQL"),
+    q("Что делает INNER JOIN?",
+      ["Возвращает все строки", "Только строки с совпадением в обеих таблицах", "Удаляет дубли", "Сортирует"],
+      1, "INNER JOIN оставляет только совпавшие записи.", "SQL"),
+    q("Какая функция считает количество строк?",
+      ["SUM", "COUNT", "AVG", "MAX"], 1, "COUNT(*) считает строки.", "SQL"),
+    q("Чем HAVING отличается от WHERE?",
+      ["Ничем", "HAVING фильтрует группы после GROUP BY", "HAVING быстрее", "WHERE только для чисел"],
+      1, "WHERE фильтрует строки до группировки, HAVING — группы после.", "SQL"),
     q("Как безопасно передать логин в SQL?",
-      ["f-строка", "execute(sql, (login,))", "Конкатенация +", "format()"], 1,
-      "Параметризованный запрос защищает от SQL-инъекций.", "Python"),
-    q("Как получить id только что созданного заказа в SQLite?",
-      ["cursor.lastrowid", "SELECT MAX(id) без условия", "rowcount", "fetchone()[1]"], 0,
-      "lastrowid — корректный способ; MAX(id) ломается при параллельных вставках.", "Python"),
-    q("Как реагировать на ввод в поле поиска без кнопки?",
-      ["trace_add('write', callback)", "after(1000)", "bind('<Return>')", "Кнопка «Найти»"], 0,
-      "StringVar.trace_add срабатывает на каждый символ — поиск в реальном времени.", "UI"),
-    q("Как подсветить строку в Treeview?",
-      ["tags + tag_configure", "font на всё окно", "Canvas", "Нельзя"], 0,
-      "tag_configure('low_stock', background='#FFB6B6') и tags=(...).", "UI"),
-    q("Как переключать экраны в tkinter?",
-      ["Новый Tk() на каждый экран", "frame.tkraise()", "destroy()", "sys.exit()"], 1,
-      "Все фреймы в одной ячейке grid, показываем нужный через tkraise().", "UI"),
-    q("Как показать ошибку с заголовком и пиктограммой?",
-      ["print()", "messagebox.showerror()", "label.config()", "log"], 1,
-      "showerror/showwarning/showinfo + askyesno для подтверждений.", "UI"),
-    q("Что делать после оформления заказа?",
-      ["Ничего", "Списать остаток и обновить каталог", "Закрыть приложение", "Удалить заказ"], 1,
-      "Остаток product_items.quantity уменьшается, каталог перезапрашивается.", "Экзамен"),
-    q("Что должно быть в Руководстве пользователя?",
-      ["Только скриншоты", "Назначение, вход, возможности, 3+ скриншота", "Код программы", "Только титульный лист"], 1,
-      "1–2 страницы: назначение, авторизация, основные возможности + скриншоты каталога, заказов, статистики.", "Экзамен"),
-    q("Что делать за 5 минут до конца задания?",
-      ["Дописывать код", "Сохранить и загрузить файлы в git", "Перезапустить ПК", "Удалить лишнее"], 1,
-      "Недосданный файл = 0 баллов за критерий.", "Экзамен"),
+      ["Склеить строкой", "Через параметр ? и кортеж", "Через f-строку", "Через %"],
+      1, "Параметризованный запрос защищает от SQL-инъекций.", "SQL"),
+    q("Что обеспечивает 3НФ?",
+      ["Скорость", "Отсутствие транзитивных зависимостей", "Шифрование", "Резервное копирование"],
+      1, "Каждый неключевой атрибут зависит только от ключа.", "БД"),
+    q("Зачем UNIQUE на login?",
+      ["Для сортировки", "Чтобы логины не повторялись", "Для связи таблиц", "Для индекса"],
+      1, "Уникальность логина требуется по заданию.", "БД"),
+    q("Как получить текущую дату в SQLite?",
+      ["NOW()", "date('now')", "CURRENT_DATE()", "today()"], 1,
+      "В SQLite — date('now'), в MySQL — CURDATE().", "SQL"),
+    q("Зачем нужен индекс?",
+      ["Для красоты", "Ускоряет поиск и фильтрацию", "Шифрует данные", "Создаёт связи"],
+      1, "Индекс ускоряет SELECT/WHERE/JOIN, но замедляет запись.", "БД"),
+
+    q("Как хранить пароль?",
+      ["Открытым текстом", "В base64", "Хеш + соль", "В cookie"], 2,
+      "werkzeug.security.generate_password_hash + check_password_hash.", "Безопасность"),
+    q("Зачем нужен CSRF-токен?",
+      ["Для кэша", "Чтобы чужая форма не отправила POST от имени пользователя", "Для SQL", "Для слайдера"],
+      1, "CSRF-токен подтверждает, что запрос пришёл с нашей формы.", "Безопасность"),
+    q("Что защищает от XSS в Jinja2?",
+      ["autoescape", "debug", "session", "redirect"], 0,
+      "Jinja2 экранирует {{ }} по умолчанию.", "Безопасность"),
+    q("Что обязательно должно быть в git-репозитории?",
+      ["Только архив", "Исходники папкой + schema.sql + README + документы", "Только .exe", "Только скриншоты"],
+      1, "Эксперт должен увидеть структуру проекта и скрипт БД.", "Git"),
+    q("Что стоит добавить в .gitignore?",
+      ["templates/", "venv/, __pycache__/, *.db, .env", "README.md", "static/"],
+      1, "Секреты, окружение и локальная БД не должны попадать в репозиторий.", "Git"),
+    q("Какой размер мобильного макета в задании?",
+      ["320×568", "375×667", "390×844", "414×896"], 2,
+      "В КОД прямо указано 390×844 px.", "Дизайн"),
+    q("Слайдер по заданию 2026: сколько изображений и интервал?",
+      ["3 / 2 с", "4 / 3 с", "5 / 3 с", "4 / 5 с"], 1,
+      "4 одинаковых изображения, автопереключение раз в 3 секунды.", "Дизайн"),
+    q("Когда доступен отзыв о курсе?",
+      ["Сразу после заявки", "После статуса «Обучение завершено»", "После оплаты", "Всегда"],
+      1, "Дополнительный функционал 2026: отзыв только после прохождения курса.", "Экзамен"),
+    q("Какой формат даты начала обучения в Модуле 2?",
+      ["YYYY-MM-DD", "ДД.ММ.ГГГГ", "MM/DD/YYYY", "любой"], 1,
+      "В дополнительном функционале указан формат ДД.ММ.ГГГГ.", "Экзамен"),
+    q("Что должно быть в правом верхнем углу после входа?",
+      ["Логин", "ФИО", "Роль", "Баланс"], 1,
+      "По аналогии с заданиями ДЭ — ФИО пользователя и выход.", "Дизайн"),
+    q("Что проверяет Модуль 3?",
+      ["Только БД", "Интеграцию дизайна, адаптив, анимации и качество кода", "Только документы", "Только git"],
+      1, "Модуль 3 — проектирование, разработка и оптимизация веб-приложения.", "Экзамен"),
+    q("Сколько баллов у вариативной части?",
+      ["10", "20", "25", "50"], 2, "В КОД 2026 — 25 баллов, всего 100.", "Экзамен"),
 ]
 
 # ---------------------------------------------------------------------------
-# 5. SQL-ПРАКТИКА (новая схема, 19 заданий)
+# 5. SQL-ПРАКТИКА (SQLite, портал «Корочки.есть»)
 # ---------------------------------------------------------------------------
-_FIO = ("u.last_name || ' ' || u.first_name || ' ' || "
-        "COALESCE(u.middle_name, '')")
-
 SQL_TASKS = [
-    {"id": "s01", "title": "1. Каталог товаров", "level": "лёгкое",
-     "task": "Выведите product_id, наименование, категорию, производство и цену всех товаров. Сортировка по product_id.",
-     "hint": "JOIN categories c ON p.category_id = c.category_id",
-     "expected": "SELECT p.product_id, p.name, c.category_name, p.manufacturer, p.price "
-                 "FROM products p JOIN categories c ON p.category_id = c.category_id "
-                 "ORDER BY p.product_id;"},
-    {"id": "s02", "title": "2. Остаток и «много/мало»", "level": "среднее",
-     "task": "Для каждого товара выведите product_id, наименование, суммарный остаток по всем размерам и метку «много» (больше 5) или «мало». Сортировка по product_id.",
-     "hint": "LEFT JOIN product_items + SUM(quantity) + CASE WHEN ... > 5",
-     "expected": "SELECT p.product_id, p.name, COALESCE(SUM(pi.quantity), 0), "
-                 "CASE WHEN COALESCE(SUM(pi.quantity), 0) > 5 THEN 'много' ELSE 'мало' END "
-                 "FROM products p LEFT JOIN product_items pi ON pi.product_id = p.product_id "
-                 "GROUP BY p.product_id, p.name ORDER BY p.product_id;"},
-    {"id": "s03", "title": "3. Подсветка: остаток ≤ 3", "level": "среднее",
-     "task": "Выведите product_id и наименование товаров, у которых суммарный остаток меньше или равен 3. Именно их подсвечивают светло-красным.",
-     "hint": "GROUP BY + HAVING COALESCE(SUM(pi.quantity), 0) <= 3",
-     "expected": "SELECT p.product_id, p.name FROM products p "
-                 "LEFT JOIN product_items pi ON pi.product_id = p.product_id "
-                 "GROUP BY p.product_id, p.name "
-                 "HAVING COALESCE(SUM(pi.quantity), 0) <= 3 ORDER BY p.product_id;"},
-    {"id": "s04", "title": "4. Скидка 25%", "level": "сложное",
-     "task": "Выведите product_id, наименование и итоговую цену: 25% скидки товарам, по которым не было заказов в прошлом календарном месяце. Округлите до копеек.",
-     "hint": "NOT EXISTS + диапазон прошлого месяца + ROUND(price*0.75, 2)",
-     "expected": "SELECT p.product_id, p.name, "
-                 "ROUND(p.price * CASE WHEN NOT EXISTS ("
-                 "SELECT 1 FROM orders o JOIN order_items oi ON oi.order_id = o.order_id "
-                 "JOIN product_items pi ON pi.item_id = oi.item_id "
-                 "WHERE pi.product_id = p.product_id "
-                 "AND o.order_date >= date('now','start of month','-1 month') "
-                 "AND o.order_date < date('now','start of month')"
-                 ") THEN 0.75 ELSE 1 END, 2) "
-                 "FROM products p ORDER BY p.product_id;"},
-    {"id": "s05", "title": "5. Поиск по названию и описанию", "level": "среднее",
-     "task": "Найдите product_id и наименование товаров, где «Кросс» встречается в названии ИЛИ описании. Помните: lower() в SQLite не работает с кириллицей.",
-     "hint": "name LIKE '%Кросс%' OR description LIKE '%Кросс%'",
-     "expected": "SELECT p.product_id, p.name FROM products p "
-                 "WHERE p.name LIKE '%Кросс%' OR p.description LIKE '%Кросс%' "
-                 "ORDER BY p.product_id;"},
-    {"id": "s06", "title": "6. Фильтр по категории", "level": "лёгкое",
-     "task": "Выведите product_id, наименование и цену товаров категории «Женская». Сортировка по цене по убыванию.",
-     "hint": "JOIN categories + WHERE category_name = 'Женская' + ORDER BY price DESC",
-     "expected": "SELECT p.product_id, p.name, p.price FROM products p "
-                 "JOIN categories c ON p.category_id = c.category_id "
-                 "WHERE c.category_name = 'Женская' ORDER BY p.price DESC, p.product_id;"},
-    {"id": "s07", "title": "7. Сортировка по цене ↑", "level": "лёгкое",
-     "task": "Выведите наименование и цену всех товаров, отсортировав по цене по возрастанию (как пункт «По цене ↑»).",
-     "hint": "ORDER BY price ASC, product_id",
-     "expected": "SELECT p.name, p.price FROM products p ORDER BY p.price ASC, p.product_id;"},
-    {"id": "s08", "title": "8. Список заказов", "level": "среднее",
-     "task": "Выведите номер заказа, дату и ФИО клиента. Сортировка по номеру заказа.",
-     "hint": "JOIN users u ON u.user_id = o.user_id; ФИО через ||",
-     "expected": "SELECT o.order_id, o.order_date, " + _FIO + " FROM orders o "
-                 "JOIN users u ON u.user_id = o.user_id ORDER BY o.order_id;"},
-    {"id": "s09", "title": "9. Состав заказа №1", "level": "сложное",
-     "task": "Для заказа №1 выведите наименование товара, производство, размер, количество, цену за единицу и сумму строки. Сортировка по order_item_id.",
-     "hint": "order_items → product_items → products/sizes",
-     "expected": "SELECT p.name, p.manufacturer, s.size_value, oi.quantity, oi.unit_price, "
-                 "ROUND(oi.quantity * oi.unit_price, 2) FROM order_items oi "
-                 "JOIN product_items pi ON pi.item_id = oi.item_id "
-                 "JOIN products p ON p.product_id = pi.product_id "
-                 "JOIN sizes s ON s.size_id = pi.size_id "
-                 "WHERE oi.order_id = 1 ORDER BY oi.order_item_id;"},
-    {"id": "s10", "title": "10. Итог по каждому заказу", "level": "сложное",
-     "task": "Выведите номер заказа и его итоговую сумму (количество × цена за единицу, сумма по всем строкам). Округлите до копеек.",
-     "hint": "SUM(oi.quantity * oi.unit_price) + GROUP BY o.order_id",
-     "expected": "SELECT o.order_id, ROUND(COALESCE(SUM(oi.quantity * oi.unit_price), 0), 2) "
-                 "FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.order_id "
-                 "GROUP BY o.order_id ORDER BY o.order_id;"},
-    {"id": "s11", "title": "11. Статистика заказов", "level": "сложное",
-     "task": "Выведите 3 показателя: количество заказов, общую выручку и средний чек, округлённый до копеек.",
-     "hint": "Подзапрос с итогами по заказам + COUNT/SUM/AVG",
-     "expected": "SELECT COUNT(*), COALESCE(SUM(total), 0), "
-                 "ROUND(COALESCE(SUM(total), 0) / COUNT(*), 2) FROM ("
-                 "SELECT o.order_id, SUM(oi.quantity * oi.unit_price) AS total "
-                 "FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.order_id "
-                 "GROUP BY o.order_id);"},
-    {"id": "s12", "title": "12. Самый дорогой заказ", "level": "среднее",
-     "task": "Выведите номер самого дорогого заказа и его сумму. Округлите до копеек.",
-     "hint": "ORDER BY total DESC LIMIT 1",
-     "expected": "SELECT o.order_id, ROUND(COALESCE(SUM(oi.quantity * oi.unit_price), 0), 2) AS total "
-                 "FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.order_id "
-                 "GROUP BY o.order_id ORDER BY total DESC, o.order_id LIMIT 1;"},
-    {"id": "s13", "title": "13. Товары без заказов", "level": "сложное",
-     "task": "Выведите product_id и наименование товаров, которые ни разу не входили ни в один заказ.",
-     "hint": "NOT EXISTS (SELECT 1 FROM order_items oi JOIN product_items pi ...)",
-     "expected": "SELECT p.product_id, p.name FROM products p WHERE NOT EXISTS ("
-                 "SELECT 1 FROM order_items oi JOIN product_items pi ON pi.item_id = oi.item_id "
-                 "WHERE pi.product_id = p.product_id) ORDER BY p.product_id;"},
-    {"id": "s14", "title": "14. Доступные размеры товара", "level": "среднее",
-     "task": "Для товара product_id = 1 выведите размер и количество на складе, только где количество больше 0. Сортировка по размеру.",
-     "hint": "JOIN sizes + WHERE product_id = 1 AND quantity > 0",
-     "expected": "SELECT s.size_value, pi.quantity FROM product_items pi "
-                 "JOIN sizes s ON s.size_id = pi.size_id "
-                 "WHERE pi.product_id = 1 AND pi.quantity > 0 ORDER BY s.size_value;"},
-    {"id": "s15", "title": "15. Категории и количество товаров", "level": "среднее",
-     "task": "Выведите название категории и количество товаров в ней, только для категорий, где товаров больше 3. Сортировка по названию.",
-     "hint": "GROUP BY category_name HAVING COUNT(*) > 3",
-     "expected": "SELECT c.category_name, COUNT(*) FROM products p "
-                 "JOIN categories c ON p.category_id = c.category_id "
-                 "GROUP BY c.category_name HAVING COUNT(*) > 3 ORDER BY c.category_name;"},
-    {"id": "s16", "title": "16. INSERT: новый пользователь", "level": "среднее",
-     "task": "Добавьте пользователя: Новиков Олег Игоревич, логин onovikov, роль «Авторизованный пользователь» (role_id = 3). Пароль не нужен.",
-     "hint": "INSERT INTO users (last_name, first_name, middle_name, login, role_id) VALUES (...)",
-     "mode": "script",
-     "verify": "SELECT login, last_name, role_id FROM users ORDER BY user_id;",
-     "expected": "INSERT INTO users (last_name, first_name, middle_name, login, role_id) "
-                 "VALUES ('Новиков', 'Олег', 'Игоревич', 'onovikov', 3);"},
-    {"id": "s17", "title": "17. INSERT: заказ + строка", "level": "сложное",
-     "task": "Создайте заказ для user_id = 4 на текущую дату и добавьте в него 1 пару товарной позиции item_id = 1 по цене 4590.00. Используйте date('now').",
-     "hint": "INSERT INTO orders ...; INSERT INTO order_items ...; два запроса через ;",
-     "mode": "script",
-     "verify": "SELECT o.user_id, oi.item_id, oi.quantity, oi.unit_price "
-               "FROM orders o JOIN order_items oi ON oi.order_id = o.order_id "
-               "WHERE o.order_id = (SELECT MAX(order_id) FROM orders);",
-     "expected": "INSERT INTO orders (order_date, user_id) VALUES (date('now'), 4);\n"
-                 "INSERT INTO order_items (order_id, item_id, quantity, unit_price) "
-                 "VALUES ((SELECT MAX(order_id) FROM orders), 1, 1, 4590.00);"},
-    {"id": "s18", "title": "18. UPDATE: дата заказа", "level": "среднее",
-     "task": "Измените дату заказа №1 на 2026-05-15.",
-     "hint": "UPDATE orders SET order_date = '2026-05-15' WHERE order_id = 1;",
-     "mode": "script",
-     "verify": "SELECT order_id, order_date FROM orders ORDER BY order_id;",
-     "expected": "UPDATE orders SET order_date = '2026-05-15' WHERE order_id = 1;"},
-    {"id": "s19", "title": "19. DELETE: строка заказа", "level": "среднее",
-     "task": "Удалите строку заказа с order_item_id = 2.",
-     "hint": "DELETE FROM order_items WHERE order_item_id = 2;",
-     "mode": "script",
-     "verify": "SELECT order_item_id FROM order_items ORDER BY order_item_id;",
-     "expected": "DELETE FROM order_items WHERE order_item_id = 2;"},
+    {"id": "s01", "title": "1. Каталог курсов", "level": "лёгкое",
+     "task": "Выведите course_id, название, длительность в часах и цену всех курсов. Сортировка по course_id.",
+     "hint": "SELECT ... FROM courses ORDER BY course_id",
+     "expected": "SELECT course_id, title, duration_hours, price FROM courses ORDER BY course_id;"},
+    {"id": "s02", "title": "2. Пользователи и роли", "level": "лёгкое",
+     "task": "Выведите user_id, логин, ФИО и название роли. Сортировка по user_id.",
+     "hint": "JOIN roles r ON r.role_id = u.role_id",
+     "expected": "SELECT u.user_id, u.login, u.full_name, r.role_name "
+                 "FROM users u JOIN roles r ON r.role_id = u.role_id ORDER BY u.user_id;"},
+    {"id": "s03", "title": "3. Все заявки с расшифровкой", "level": "среднее",
+     "task": "Выведите application_id, ФИО, название курса, дату начала и статус. Сортировка по application_id.",
+     "hint": "Три JOIN: users, courses, application_statuses",
+     "expected": "SELECT a.application_id, u.full_name, c.title, a.start_date, s.status_name "
+                 "FROM applications a "
+                 "JOIN users u ON u.user_id = a.user_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "JOIN application_statuses s ON s.status_id = a.status_id "
+                 "ORDER BY a.application_id;"},
+    {"id": "s04", "title": "4. Заявки по статусам", "level": "среднее",
+     "task": "Посчитайте количество заявок в каждом статусе. Выведите status_id, название статуса и количество. Сортировка по status_id.",
+     "hint": "JOIN application_statuses + GROUP BY + COUNT(*)",
+     "expected": "SELECT s.status_id, s.status_name, COUNT(a.application_id) "
+                 "FROM application_statuses s "
+                 "LEFT JOIN applications a ON a.status_id = s.status_id "
+                 "GROUP BY s.status_id, s.status_name ORDER BY s.status_id;"},
+    {"id": "s05", "title": "5. Популярность курсов", "level": "среднее",
+     "task": "Для каждого курса выведите название и количество заявок. Сортировка по количеству по убыванию, затем по названию.",
+     "hint": "LEFT JOIN applications + GROUP BY + ORDER BY COUNT(*) DESC",
+     "expected": "SELECT c.title, COUNT(a.application_id) AS cnt "
+                 "FROM courses c LEFT JOIN applications a ON a.course_id = c.course_id "
+                 "GROUP BY c.course_id, c.title ORDER BY cnt DESC, c.title;"},
+    {"id": "s06", "title": "6. Выручка по завершённым курсам", "level": "сложное",
+     "task": "Посчитайте выручку по каждому курсу только по заявкам со статусом «Обучение завершено». Выведите название курса и сумму. Сортировка по сумме по убыванию, затем по названию.",
+     "hint": "JOIN courses + WHERE status_name = 'Обучение завершено' + SUM(price)",
+     "expected": "SELECT c.title, SUM(c.price) AS revenue "
+                 "FROM applications a "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "JOIN application_statuses s ON s.status_id = a.status_id "
+                 "WHERE s.status_name = 'Обучение завершено' "
+                 "GROUP BY c.course_id, c.title ORDER BY revenue DESC, c.title;"},
+    {"id": "s07", "title": "7. Общая выручка и средний чек", "level": "сложное",
+     "task": "По завершённым заявкам выведите количество заявок, общую выручку и средний чек. Округлите деньги до копеек.",
+     "hint": "COUNT(*), SUM(c.price), ROUND(AVG(c.price), 2) + WHERE status_name",
+     "expected": "SELECT COUNT(*) AS orders_count, ROUND(SUM(c.price), 2) AS revenue, "
+                 "ROUND(AVG(c.price), 2) AS avg_check "
+                 "FROM applications a "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "JOIN application_statuses s ON s.status_id = a.status_id "
+                 "WHERE s.status_name = 'Обучение завершено';"},
+    {"id": "s08", "title": "8. Поиск пользователей", "level": "лёгкое",
+     "task": "Найдите пользователей, у которых телефон начинается на 8(921) или email начинается на admin. Выведите user_id, ФИО, телефон, email. Сортировка по user_id.",
+     "hint": "WHERE phone LIKE '8(921)%' OR email LIKE 'admin%'",
+     "expected": "SELECT user_id, full_name, phone, email FROM users "
+                 "WHERE phone LIKE '8(921)%' OR email LIKE 'admin%' ORDER BY user_id;"},
+    {"id": "s09", "title": "9. Заявки пользователя ivanov01", "level": "среднее",
+     "task": "Выведите application_id, название курса, дату начала и статус заявок пользователя с логином ivanov01. Сортировка по дате начала.",
+     "hint": "JOIN users + WHERE u.login = 'ivanov01' + JOIN courses/statuses",
+     "expected": "SELECT a.application_id, c.title, a.start_date, s.status_name "
+                 "FROM applications a "
+                 "JOIN users u ON u.user_id = a.user_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "JOIN application_statuses s ON s.status_id = a.status_id "
+                 "WHERE u.login = 'ivanov01' ORDER BY a.start_date, a.application_id;"},
+    {"id": "s10", "title": "10. Отзывы с оценкой 4–5", "level": "среднее",
+     "task": "Выведите review_id, ФИО автора, название курса, оценку и текст отзыва. Только оценки 4 и 5. Сортировка по оценке по убыванию, затем по review_id.",
+     "hint": "JOIN reviews → users → applications → courses + WHERE rating >= 4",
+     "expected": "SELECT r.review_id, u.full_name, c.title, r.rating, r.review_text "
+                 "FROM reviews r "
+                 "JOIN users u ON u.user_id = r.user_id "
+                 "JOIN applications a ON a.application_id = r.application_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "WHERE r.rating >= 4 ORDER BY r.rating DESC, r.review_id;"},
+    {"id": "s11", "title": "11. Курсы без заявок", "level": "сложное",
+     "task": "Выведите course_id и название курсов, на которые ещё нет ни одной заявки. Сортировка по course_id.",
+     "hint": "LEFT JOIN applications + WHERE a.application_id IS NULL",
+     "expected": "SELECT c.course_id, c.title FROM courses c "
+                 "LEFT JOIN applications a ON a.course_id = c.course_id "
+                 "WHERE a.application_id IS NULL ORDER BY c.course_id;"},
+    {"id": "s12", "title": "12. Пользователи с 2+ заявками", "level": "сложное",
+     "task": "Выведите user_id, ФИО и количество заявок для пользователей, у которых больше одной заявки. Сортировка по количеству по убыванию, затем по user_id.",
+     "hint": "JOIN + GROUP BY + HAVING COUNT(*) > 1",
+     "expected": "SELECT u.user_id, u.full_name, COUNT(a.application_id) AS cnt "
+                 "FROM users u JOIN applications a ON a.user_id = u.user_id "
+                 "GROUP BY u.user_id, u.full_name HAVING COUNT(*) > 1 "
+                 "ORDER BY cnt DESC, u.user_id;"},
+    {"id": "s13", "title": "13. Последняя заявка каждого пользователя", "level": "сложное",
+     "task": "Для каждого пользователя, у которого есть заявки, выведите user_id, ФИО, application_id и дату создания последней заявки. Сортировка по user_id.",
+     "hint": "Коррелированный подзапрос: a.application_id = (SELECT ... ORDER BY created_at DESC LIMIT 1)",
+     "expected": "SELECT u.user_id, u.full_name, a.application_id, a.created_at "
+                 "FROM users u JOIN applications a ON a.user_id = u.user_id "
+                 "WHERE a.application_id = (SELECT a2.application_id FROM applications a2 "
+                 "WHERE a2.user_id = u.user_id ORDER BY a2.created_at DESC, a2.application_id DESC LIMIT 1) "
+                 "ORDER BY u.user_id;"},
+    {"id": "s14", "title": "14. Причины отмены", "level": "лёгкое",
+     "task": "Выведите application_id, ФИО и причину отмены для отменённых заявок. Сортировка по application_id.",
+     "hint": "WHERE s.status_name = 'Отменена' AND a.cancel_reason IS NOT NULL",
+     "expected": "SELECT a.application_id, u.full_name, a.cancel_reason "
+                 "FROM applications a "
+                 "JOIN users u ON u.user_id = a.user_id "
+                 "JOIN application_statuses s ON s.status_id = a.status_id "
+                 "WHERE s.status_name = 'Отменена' AND a.cancel_reason IS NOT NULL "
+                 "ORDER BY a.application_id;"},
+    {"id": "s15", "title": "15. Заявки по месяцам", "level": "сложное",
+     "task": "Сгруппируйте заявки по месяцу создания. Выведите месяц в формате YYYY-MM и количество. Сортировка по месяцу.",
+     "hint": "strftime('%Y-%m', created_at) + GROUP BY",
+     "expected": "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS cnt "
+                 "FROM applications GROUP BY month ORDER BY month;"},
+    {"id": "s16", "title": "16. Средний рейтинг курсов", "level": "сложное",
+     "task": "Для курсов, у которых есть отзывы, выведите название, средний рейтинг (округлить до 2 знаков) и количество отзывов. Сортировка по рейтингу по убыванию, затем по названию.",
+     "hint": "JOIN reviews → applications → courses + AVG(rating) + GROUP BY",
+     "expected": "SELECT c.title, ROUND(AVG(r.rating), 2) AS avg_rating, COUNT(*) AS reviews_count "
+                 "FROM reviews r "
+                 "JOIN applications a ON a.application_id = r.application_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "GROUP BY c.course_id, c.title ORDER BY avg_rating DESC, c.title;"},
+    {"id": "s17", "title": "17. Оплата: наличные и перевод", "level": "среднее",
+     "task": "Посчитайте количество заявок и сумму курсов по каждому способу оплаты. Выведите payment_method, количество и сумму. Сортировка по payment_method.",
+     "hint": "GROUP BY payment_method + COUNT(*) + SUM(c.price)",
+     "expected": "SELECT a.payment_method, COUNT(*) AS cnt, ROUND(SUM(c.price), 2) AS total "
+                 "FROM applications a JOIN courses c ON c.course_id = a.course_id "
+                 "GROUP BY a.payment_method ORDER BY a.payment_method;"},
+    {"id": "s18", "title": "18. Уже начавшиеся заявки", "level": "среднее",
+     "task": "Выведите application_id, ФИО, название курса и дату начала для заявок, у которых дата начала раньше сегодняшней. Сортировка по дате начала, затем по application_id.",
+     "hint": "WHERE a.start_date < date('now')",
+     "expected": "SELECT a.application_id, u.full_name, c.title, a.start_date "
+                 "FROM applications a "
+                 "JOIN users u ON u.user_id = a.user_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "WHERE a.start_date < date('now') "
+                 "ORDER BY a.start_date, a.application_id;"},
+    {"id": "s19", "title": "19. Новые заявки за месяц", "level": "среднее",
+     "task": "Выведите application_id, ФИО, курс и дату создания заявок, созданных за последние 30 дней. Сортировка по дате создания, затем по application_id.",
+     "hint": "WHERE a.created_at >= date('now','-30 days')",
+     "expected": "SELECT a.application_id, u.full_name, c.title, a.created_at "
+                 "FROM applications a "
+                 "JOIN users u ON u.user_id = a.user_id "
+                 "JOIN courses c ON c.course_id = a.course_id "
+                 "WHERE a.created_at >= date('now','-30 days') "
+                 "ORDER BY a.created_at, a.application_id;"},
 ]
 
 # ---------------------------------------------------------------------------
-# 6. КРИТЕРИИ 2027 (100 баллов)
+# 6. КРИТЕРИИ ПРОБНОГО ЭКЗАМЕНА (100 баллов)
 # ---------------------------------------------------------------------------
 CRITERIA = [
-    ("Задание 1. База данных средствами СУБД — 15", [
-        ("8 таблиц, 3НФ, согласованные имена", 5),
-        ("PK, FK, CHECK, UNIQUE, ON DELETE", 3),
-        ("ER-диаграмма в PDF: таблицы, связи, атрибуты, ключи", 3),
-        ("Данные из файлов import загружены", 2),
-        ("Скрипт БД с данными (schema.sql) или .dt", 2),
+    ("Модуль 1. Разработка подсистемы безопасности информационной системы — 18", [
+        ("Регистрация: серверная валидация логина, пароля, ФИО, телефона, email", 4),
+        ("Уникальный логин, пароль хранится только в виде хеша", 3),
+        ("Вход/выход, сессия, понятные сообщения об ошибках", 3),
+        ("Роли «пользователь/администратор», защита админ-маршрутов", 3),
+        ("Защита от SQL-инъекций, XSS и CSRF", 3),
+        ("Доступ администратора Admin/KorokNET, запрет прямого URL", 2),
     ]),
-    ("Задание 2. Алгоритм и приложение — 10", [
-        ("Блок-схема оформления заказа по ГОСТ 19.701-90 (PDF)", 2),
-        ("Алгоритм расчёта цены со скидкой 25%", 1),
-        ("Название компании, стиль, логотип, иконка, заголовки окон", 2),
-        ("Каталог: изображение/заглушка, категория, наименование, производство, состав, цена", 2),
-        ("«Много/мало» по суммарному остатку и подсветка ≤3", 1),
-        ("Скидка 25% товарам без заказов в прошлом месяце", 1),
-        ("Отладка: нет аварийных завершений", 1),
+    ("Модуль 1. Разработка модулей информационной системы — 4", [
+        ("Создание заявки: курс, дата, способ оплаты, запись в БД", 2),
+        ("Статусы заявок и отзыв только после завершения курса", 2),
     ]),
-    ("Задание 3. Интерфейс и оформление заказа — 25", [
-        ("Вход только по логину, гость «Без входа»", 3),
-        ("ФИО в правом верхнем углу, выход", 1),
-        ("Навигация, «Назад», заголовок каждого окна", 2),
-        ("Обработка ошибок, валидация, полезные сообщения, комментарии", 3),
-        ("Сортировка по цене ↑↓ через выпадающий список", 2),
-        ("Фильтр по категории, «Все категории» первым", 2),
-        ("Поиск по наименованию и описанию", 2),
-        ("Поиск + фильтр + сортировка в реальном времени совместно", 3),
-        ("Карточка товара: все поля, размерный ряд, доступные размеры", 2),
-        ("Выбор размера и количества, корзина, подтверждение, дата заказа", 3),
-        ("Списание остатка и обновление каталога", 2),
+    ("Модуль 1. Использование современных средств поиска и анализа информации — 3", [
+        ("ER-диаграмма и schema.sql с демо-данными", 1),
+        ("Git-репозиторий, осмысленные коммиты, README", 1),
+        ("Фреймворк/библиотеки и аккуратная структура проекта", 1),
     ]),
-    ("Задание 4. Заказы у Администратора и Менеджера — 25", [
-        ("Список заказов: дата, ФИО клиента", 4),
-        ("Добавление и удаление позиций заказа", 4),
-        ("Выбор товара из каталога с поиском по наименованию", 3),
-        ("Состав заказа: товар+производство, размер, количество, цена, сумма", 4),
-        ("Администратор: изменение даты заказа", 3),
-        ("Администратор: удаление позиций", 3),
-        ("Обновление списка после изменений", 2),
-        ("git-репозиторий и README.md", 2),
+    ("Модуль 2. Разработка дизайн-концепций веб-приложений — 13", [
+        ("Корпоративный стиль: палитра, шрифты, логотип, единые отступы", 4),
+        ("Компоненты: кнопки, поля, карточки, бейджи, состояния", 3),
+        ("Адаптив 390×844, mobile-first, без горизонтального скролла", 3),
+        ("Слайдер: 4 изображения, 3 секунды, кнопки назад/вперёд", 3),
     ]),
-    ("Задание 5. Статистика и руководство пользователя — 25", [
-        ("Кнопка «Статистика» у Менеджера и Администратора", 3),
-        ("Таблица всех заказов: номер, дата, ФИО, сумма", 4),
-        ("Показатель «количество заказов»", 2),
-        ("Показатель «общая выручка»", 2),
-        ("Показатель «средний (или максимальный) чек»", 2),
-        ("Руководство_пользователя.docx/.pdf: 1–2 стр., 3+ скриншота", 7),
-        ("Код, скрипт БД и руководство загружены в git", 5),
+    ("Модуль 2. Формирование требований к дизайну веб-приложений — 4", [
+        ("Анализ целевой аудитории и пользовательских сценариев", 2),
+        ("Прототип/структура всех страниц и переходов", 2),
+    ]),
+    ("Модуль 2. Разработка дизайна с учётом современных тенденций — 8", [
+        ("Flexbox/Grid, типографика, сетка и spacing", 3),
+        ("Анимации и микроанимации, не мешающие работе", 3),
+        ("Доступность: контраст, alt, focus-visible, aria", 2),
+    ]),
+    ("Модуль 3. Разработка веб-приложения в соответствии с техническим заданием — 14", [
+        ("Полный стек: frontend + backend + БД", 4),
+        ("Все сценарии: регистрация, вход, заявки, админка", 4),
+        ("Корректная работа на мобильном 390×844", 2),
+        ("Валидация, обработка ошибок, пустые состояния", 2),
+        ("Структура проекта и коммиты по модулям", 2),
+    ]),
+    ("Модуль 3. Разработка интерфейса пользователя — 11", [
+        ("Навигация, формы, обратная связь, сообщения", 3),
+        ("Админ-панель: фильтр, поиск, сортировка, пагинация", 3),
+        ("Смена статусов «Идет обучение» / «Обучение завершено», подтверждения", 2),
+        ("Переходы и анимации, аккуратный UX", 2),
+        ("Интегрированные адаптив и слайдер", 1),
+    ]),
+    ("Вариативная часть (тренировочная) — 25", [
+        ("JSON API / AJAX-запрос без перезагрузки страницы", 5),
+        ("Тесты: регистрация, вход, заявка, запрет админки", 5),
+        ("Руководство пользователя 1–2 стр. с 4+ скриншотами", 5),
+        ("Запуск/деплой, .env, резервная копия БД", 5),
+        ("Оптимизация: индексы, отсутствие N+1, сжатие, кэш", 5),
     ]),
 ]
 
@@ -1097,201 +1338,357 @@ CRITERIA = [
 # 7. ШПАРГАЛКИ
 # ---------------------------------------------------------------------------
 SNIPPETS = [
-    ("Схема БД: 8 таблиц", """CREATE TABLE product_items (
-    item_id    INTEGER PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
-    size_id    INTEGER NOT NULL REFERENCES sizes(size_id) ON DELETE RESTRICT,
-    quantity   INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    UNIQUE (product_id, size_id)
-);
-CREATE TABLE orders (
-    order_id   INTEGER PRIMARY KEY,
-    order_date TEXT NOT NULL,
-    user_id    INTEGER NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT
-);
-CREATE TABLE order_items (
-    order_item_id INTEGER PRIMARY KEY,
-    order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
-    item_id       INTEGER NOT NULL REFERENCES product_items(item_id) ON DELETE RESTRICT,
-    quantity      INTEGER NOT NULL CHECK (quantity > 0),
-    unit_price    REAL NOT NULL CHECK (unit_price >= 0)
-);
-"""),
-    ("Вход только по логину", """def find_user(conn, login):
-    return conn.execute(
-        "SELECT u.user_id, u.last_name, u.first_name, u.middle_name, r.role_name "
-        "FROM users u JOIN roles r ON u.role_id = r.role_id "
-        "WHERE u.login = ?", (login,)).fetchone()
+    ("HTML: каркас страницы", """<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Корочки.есть — онлайн-курсы</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="{{ url_for('index') }}">Корочки.есть</a>
+    <nav class="main-nav">
+      <a href="{{ url_for('index') }}">Курсы</a>
+      {% if session.user_id %}
+        <a href="{{ url_for('dashboard') }}">Мои заявки</a>
+        <a href="{{ url_for('logout') }}">Выйти</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Вход</a>
+        <a href="{{ url_for('register') }}">Регистрация</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>"""),
+    ("HTML: форма регистрации", """<form method="post" class="form" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-user = find_user(conn, login_var.get().strip())
-if user is None:
-    messagebox.showerror("Ошибка авторизации",
-        "Пользователь с таким логином не найден. Проверьте раскладку "
-        "и выберите логин из списка пользователей.")
-else:
-    session.user = user
-    show_catalog()
+  <label for="login">Логин</label>
+  <input id="login" name="login" value="{{ form.login or '' }}"
+         required minlength="6" pattern="[A-Za-z0-9]{6,}">
+  {% if errors.login %}<p class="field-error">{{ errors.login }}</p>{% endif %}
 
-# Гость
-session.user = None
-show_catalog()
-"""),
-    ("Каталог: остаток, «много/мало», скидка", """SELECT p.product_id, p.name, c.category_name, p.manufacturer,
-       p.composition, p.price, p.image_path,
-       COALESCE(SUM(pi.quantity), 0) AS total_qty,
-       CASE WHEN COALESCE(SUM(pi.quantity), 0) > 5
-            THEN 'много' ELSE 'мало' END AS stock_label,
-       CASE WHEN NOT EXISTS (
-           SELECT 1 FROM orders o
-           JOIN order_items oi ON oi.order_id = o.order_id
-           JOIN product_items x ON x.item_id = oi.item_id
-           WHERE x.product_id = p.product_id
-             AND o.order_date >= date('now','start of month','-1 month')
-             AND o.order_date <  date('now','start of month')
-       ) THEN ROUND(p.price * 0.75, 2) ELSE p.price END AS final_price
-FROM products p
-JOIN categories c ON p.category_id = c.category_id
-LEFT JOIN product_items pi ON pi.product_id = p.product_id
-WHERE 1 = 1
-GROUP BY p.product_id, p.name, c.category_name, p.manufacturer,
-         p.composition, p.price, p.image_path
-ORDER BY p.price ASC;
-"""),
-    ("Поиск, фильтр и сортировка вместе", """def load_products(pattern="", category="Все категории", sort="По цене ↑"):
-    sql = ("SELECT p.product_id, p.name, c.category_name, p.manufacturer, "
-           "p.composition, p.price, p.image_path, "
-           "COALESCE(SUM(pi.quantity), 0) AS total_qty "
-           "FROM products p "
-           "JOIN categories c ON p.category_id = c.category_id "
-           "LEFT JOIN product_items pi ON pi.product_id = p.product_id "
-           "WHERE 1 = 1")
-    params = []
-    if pattern:
-        sql += " AND (p.name LIKE ? OR p.description LIKE ?)"
-        params += [f"%{pattern}%", f"%{pattern}%"]
-    if category != "Все категории":
-        sql += " AND c.category_name = ?"
-        params.append(category)
-    sql += " GROUP BY p.product_id, p.name, c.category_name, p.manufacturer, "
-    sql += "p.composition, p.price, p.image_path"
-    sql += " ORDER BY p.price " + ("DESC" if "↓" in sort else "ASC")
-    return conn.execute(sql, params).fetchall()
+  <label for="password">Пароль</label>
+  <input id="password" name="password" type="password"
+         required minlength="8" autocomplete="new-password">
+  {% if errors.password %}<p class="field-error">{{ errors.password }}</p>{% endif %}
 
-for var in (search_var, category_var, sort_var):
-    var.trace_add("write", lambda *_: refresh())
-"""),
-    ("Подсветка строк и «много/мало»", """table.tag_configure("low_stock", background="#FFB6B6")
-table.tag_configure("discount", foreground="#c0392b")
+  <label for="full_name">ФИО</label>
+  <input id="full_name" name="full_name" value="{{ form.full_name or '' }}" required>
 
-for row in rows:
-    product_id, name, category, manufacturer, composition, price, image, total_qty = row
-    tag = "low_stock" if total_qty <= 3 else ""
-    label = "много" if total_qty > 5 else "мало"
-    price_text = f"{price:.2f}"
-    if discount_applies(product_id):
-        price_text = f"{price * 0.75:.2f}"
-    table.insert("", "end",
-                 values=(name, category, manufacturer, composition, price_text, label),
-                 tags=(tag,))
-"""),
-    ("Оформление заказа (транзакция)", """def confirm_order(user_id, cart):
-    if not cart:
-        messagebox.showwarning("Корзина пуста", "Добавьте хотя бы одну позицию.")
-        return
-    try:
-        conn.execute("BEGIN")
-        cur = conn.execute(
-            "INSERT INTO orders (order_date, user_id) VALUES (date('now'), ?)",
-            (user_id,))
-        order_id = cur.lastrowid
-        for row in cart:
-            # Проверяем остаток ещё раз перед списанием
-            left = conn.execute(
-                "SELECT quantity FROM product_items WHERE item_id = ?",
-                (row["item_id"],)).fetchone()[0]
-            if row["qty"] > left:
-                raise ValueError(
-                    f"На складе осталось {left} пар. Уменьшите количество.")
-            conn.execute(
-                "INSERT INTO order_items (order_id, item_id, quantity, unit_price) "
-                "VALUES (?, ?, ?, ?)",
-                (order_id, row["item_id"], row["qty"], row["price"]))
-            conn.execute(
-                "UPDATE product_items SET quantity = quantity - ? WHERE item_id = ?",
-                (row["qty"], row["item_id"]))
-        conn.commit()
-    except Exception as err:
-        conn.rollback()
-        messagebox.showerror("Заказ не создан",
-            f"{err}\\n\\nИсправьте количество и подтвердите заказ снова.")
-        return
-    messagebox.showinfo("Готово", f"Заказ №{order_id} оформлен.")
-"""),
-    ("Состав заказа", """SELECT oi.order_id, p.name, p.manufacturer, s.size_value,
-       oi.quantity, oi.unit_price,
-       ROUND(oi.quantity * oi.unit_price, 2) AS line_total
-FROM order_items oi
-JOIN product_items pi ON pi.item_id = oi.item_id
-JOIN products p ON p.product_id = pi.product_id
-JOIN sizes s ON s.size_id = pi.size_id
-WHERE oi.order_id = ?
-ORDER BY oi.order_item_id;
-"""),
-    ("Статистика заказов", """SELECT o.order_id, o.order_date,
-       u.last_name || ' ' || u.first_name || ' ' || COALESCE(u.middle_name, '') AS client,
-       ROUND(COALESCE(SUM(oi.quantity * oi.unit_price), 0), 2) AS total
-FROM orders o
-JOIN users u ON u.user_id = o.user_id
-LEFT JOIN order_items oi ON oi.order_id = o.order_id
-GROUP BY o.order_id, o.order_date, u.last_name, u.first_name, u.middle_name
-ORDER BY o.order_id;
+  <label for="phone">Телефон</label>
+  <input id="phone" name="phone" type="tel"
+         placeholder="8(921)111-11-11" value="{{ form.phone or '' }}" required>
 
--- Три показателя
-SELECT COUNT(*) AS orders_count,
-       COALESCE(SUM(total), 0) AS revenue,
-       ROUND(COALESCE(SUM(total), 0) / COUNT(*), 2) AS avg_check
-FROM (SELECT o.order_id, SUM(oi.quantity * oi.unit_price) AS total
-      FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.order_id
-      GROUP BY o.order_id);
-"""),
-    ("Импорт CSV", """import csv
+  <label for="email">E-mail</label>
+  <input id="email" name="email" type="email" value="{{ form.email or '' }}" required>
 
-with open("products.csv", encoding="utf-8", newline="") as f:
-    for row in csv.DictReader(f, delimiter=";"):
-        category_id = get_or_create_category(row["category_name"])
-        conn.execute(
-            "INSERT INTO products (category_id, subcategory, name, manufacturer, "
-            "description, composition, image_path, price) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (category_id, row["subcategory"], row["name"], row["manufacturer"],
-             row["description"], row["composition"],
-             row["image_path"] or None, float(row["price"])))
+  <button class="btn btn--primary" type="submit">Зарегистрироваться</button>
+</form>"""),
+    ("CSS: переменные и адаптив", """:root {
+  --brand: #2563eb;
+  --brand-dark: #1e40af;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --danger: #dc2626;
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+.container { width: min(100% - 32px, 1120px); margin-inline: auto; }
+
+@media (min-width: 640px) {
+  .course-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 960px) {
+  .course-grid { grid-template-columns: repeat(3, 1fr); }
+}"""),
+    ("CSS: карточки и кнопки", """.course-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.course-card {
+  background: var(--card);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn--primary { background: var(--brand); color: #fff; }
+.btn--primary:hover { background: var(--brand-dark); }
+.btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }"""),
+    ("JavaScript: валидация формы", """const form = document.querySelector('#register-form');
+const rules = {
+  login: [/^[A-Za-z0-9]{6,}$/, 'Логин: латиница и цифры, минимум 6 символов'],
+  password: [/^.{8,}$/, 'Пароль: минимум 8 символов'],
+  full_name: [/^[А-Яа-яЁё\\s]+$/, 'ФИО: только кириллица и пробелы'],
+  phone: [/^8\\(\\d{3}\\)\\d{3}-\\d{2}-\\d{2}$/, 'Телефон: 8(XXX)XXX-XX-XX'],
+  email: [/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/, 'Введите корректный email'],
+};
+
+form.addEventListener('submit', (event) => {
+  let valid = true;
+  for (const [name, [re, message]] of Object.entries(rules)) {
+    const input = form.elements[name];
+    const box = document.querySelector(`#${name}-error`);
+    const ok = re.test(input.value.trim());
+    box.textContent = ok ? '' : message;
+    input.classList.toggle('is-error', !ok);
+    input.setAttribute('aria-invalid', String(!ok));
+    if (!ok) valid = false;
+  }
+  if (!valid) event.preventDefault();
+});"""),
+    ("JavaScript: слайдер 4 / 3 секунды", """const root = document.querySelector('[data-slider]');
+const img = root.querySelector('.slider__img');
+const slides = [1, 2, 3, 4].map(n => `/static/img/slide-${n}.svg`);
+let index = 0;
+let timer = null;
+
+function show(i) {
+  index = (i + slides.length) % slides.length;
+  img.src = slides[index];
+  img.alt = `Курс ${index + 1}`;
+}
+function start() {
+  stop();
+  timer = setInterval(() => show(index + 1), 3000);
+}
+function stop() {
+  if (timer) clearInterval(timer);
+  timer = null;
+}
+root.querySelector('[data-prev]').addEventListener('click', () => { show(index - 1); start(); });
+root.querySelector('[data-next]').addEventListener('click', () => { show(index + 1); start(); });
+root.addEventListener('mouseenter', stop);
+root.addEventListener('mouseleave', start);
+start();"""),
+    ("Flask: маршруты и Jinja", """from flask import Flask, render_template, request, redirect, url_for, session, flash
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'change-me'
+
+@app.get('/')
+def index():
+    courses = get_courses()
+    return render_template('index.html', courses=courses)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        errors = validate_registration(request.form)
+        if not errors:
+            create_user(request.form)
+            flash('Регистрация успешна, войдите', 'success')
+            return redirect(url_for('login'))
+        return render_template('register.html', errors=errors, form=request.form)
+    return render_template('register.html', errors={}, form={})
+
+@app.get('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', applications=get_user_applications(session['user_id']))
+
+if __name__ == '__main__':
+    app.run(debug=True)"""),
+    ("Flask: сессия, роли, CSRF", """from functools import wraps
+from flask import session, redirect, url_for, flash, abort, request
+import secrets
+
+def login_required(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Сначала войдите в систему', 'error')
+            return redirect(url_for('login'))
+        return view(*args, **kwargs)
+    return wrapper
+
+def admin_required(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if session.get('role_id') != 1:
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapper
+
+@app.before_request
+def csrf_protect():
+    if request.method == 'POST':
+        token = session.get('csrf_token')
+        if not token or token != request.form.get('csrf_token'):
+            abort(400, 'CSRF token mismatch')
+
+def make_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(16)
+    return session['csrf_token']"""),
+    ("SQLite: параметризованные запросы", """import sqlite3
+
+conn = sqlite3.connect('instance/korochki.db')
+conn.row_factory = sqlite3.Row
+conn.execute('PRAGMA foreign_keys = ON')
+
+# Чтение
+rows = conn.execute(
+    'SELECT application_id, course_id, start_date, status_id '
+    'FROM applications WHERE user_id = ? ORDER BY created_at DESC',
+    (user_id,)
+).fetchall()
+
+# Запись
+cur = conn.execute(
+    'INSERT INTO applications (user_id, course_id, start_date, payment_method, status_id) '
+    'VALUES (?, ?, ?, ?, 1)',
+    (user_id, course_id, start_date, payment_method)
+)
 conn.commit()
-"""),
-    ("Руководство пользователя: структура", """# Руководство пользователя «Чудо Обувь»
+application_id = cur.lastrowid
 
-## 1. Назначение программы
-Система оформления заказов обуви: каталог, корзина, заказы, статистика.
+# Изменение статуса (только администратор)
+conn.execute(
+    'UPDATE applications SET status_id = ?, cancel_reason = ? WHERE application_id = ?',
+    (status_id, cancel_reason, application_id)
+)
+conn.commit()"""),
+    ("БД: схема «Корочки.есть»", """CREATE TABLE users (
+    user_id       INTEGER PRIMARY KEY,
+    login         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    full_name     TEXT NOT NULL,
+    phone         TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE,
+    role_id       INTEGER NOT NULL REFERENCES roles(role_id),
+    created_at    TEXT NOT NULL DEFAULT (date('now'))
+);
 
-## 2. Вход в систему
-Введите логин из списка пользователей (пароль не требуется).
-Для просмотра каталога без входа нажмите «Без входа».
+CREATE TABLE applications (
+    application_id INTEGER PRIMARY KEY,
+    user_id        INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    course_id      INTEGER NOT NULL REFERENCES courses(course_id) ON DELETE RESTRICT,
+    start_date     TEXT NOT NULL,
+    payment_method TEXT NOT NULL CHECK (payment_method IN ('cash', 'phone_transfer')),
+    status_id      INTEGER NOT NULL REFERENCES application_statuses(status_id),
+    cancel_reason  TEXT,
+    created_at     TEXT NOT NULL DEFAULT (date('now'))
+);
 
-## 3. Каталог
-Поиск по наименованию и описанию, фильтр по категории,
-сортировка по цене, скидка 25%, подсветка низкого остатка.
-[Скриншот 1: каталог]
+CREATE TABLE reviews (
+    review_id      INTEGER PRIMARY KEY,
+    application_id INTEGER NOT NULL UNIQUE
+                   REFERENCES applications(application_id) ON DELETE CASCADE,
+    user_id        INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    rating         INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review_text    TEXT
+);"""),
+    ("Админка: фильтр и пагинация", """@app.get('/admin')
+@admin_required
+def admin():
+    status_id = request.args.get('status', type=int)
+    search = (request.args.get('q') or '').strip()
+    page = max(request.args.get('page', 1, type=int), 1)
+    per_page = 8
 
-## 4. Оформление заказа
-Выберите товар → размер → количество → «В корзину» → «Оформить заказ».
-[Скриншот 2: карточка/корзина]
+    where, params = [], []
+    if status_id:
+        where.append('a.status_id = ?')
+        params.append(status_id)
+    if search:
+        where.append('(u.full_name LIKE ? OR c.title LIKE ?)')
+        params += [f'%{search}%', f'%{search}%']
+    clause = ('WHERE ' + ' AND '.join(where)) if where else ''
 
-## 5. Работа с заказами (менеджер/администратор)
-Список заказов, состав, добавление и удаление позиций.
-[Скриншот 3: заказы]
+    total = conn.execute(
+        f'SELECT COUNT(*) FROM applications a '
+        f'JOIN users u ON u.user_id = a.user_id '
+        f'JOIN courses c ON c.course_id = a.course_id {clause}', params
+    ).fetchone()[0]
 
-## 6. Статистика
-Количество заказов, выручка, средний чек.
-[Скриншот 4: статистика]
+    rows = conn.execute(
+        f'SELECT a.*, u.full_name, c.title, s.status_name '
+        f'FROM applications a '
+        f'JOIN users u ON u.user_id = a.user_id '
+        f'JOIN courses c ON c.course_id = a.course_id '
+        f'JOIN application_statuses s ON s.status_id = a.status_id '
+        f'{clause} ORDER BY a.created_at DESC LIMIT ? OFFSET ?',
+        params + [per_page, (page - 1) * per_page]
+    ).fetchall()
+
+    return render_template('admin.html', rows=rows, total=total,
+                           page=page, per_page=per_page,
+                           statuses=get_statuses())"""),
+    ("Git: сдача работы", """git init
+git add .
+git commit -m "feat: каркас проекта, схема БД и регистрация"
+
+git branch -M main
+git remote add origin https://github.com/user/demoexam-web.git
+git push -u origin main
+
+# после каждого модуля
+git add .
+git commit -m "feat: заявки, статусы и админ-панель"
+git push
+
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.DS_Store"""),
+    ("Руководство пользователя: структура", """# Руководство пользователя «Корочки.есть»
+
+## 1. Назначение
+Портал записи на онлайн-курсы дополнительного профессионального образования.
+
+## 2. Регистрация
+Откройте «Регистрация», заполните логин, пароль, ФИО, телефон, email.
+[Скриншот 1: форма регистрации]
+
+## 3. Вход
+Введите логин и пароль. Ошибки выводятся на форме.
+[Скриншот 2: вход]
+
+## 4. Новая заявка
+Выберите курс, дату начала и способ оплаты, нажмите «Отправить».
+[Скриншот 3: форма заявки]
+
+## 5. Мои заявки
+История заявок и статусы. После завершения курса можно оставить отзыв.
+[Скриншот 4: личный кабинет]
+
+## 6. Администратор
+Вход Admin / KorokNET. Фильтр, поиск, пагинация, смена статусов.
+[Скриншот 5: админ-панель]
 """),
 ]

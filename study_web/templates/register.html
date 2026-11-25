@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — ДЭ.Курс{% endblock %}
+
+{% block content %}
+<main class="wrap auth">
+  <form method="post" class="card form" novalidate>
+    <h1>Регистрация</h1>
+    <p class="muted">Достаточно никнейма и пароля.</p>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    {% if errors %}<div class="alert alert--error">Проверьте форму.</div>{% endif %}
+
+    <label for="login">Никнейм</label>
+    <input id="login" name="login" value="{{ form.get('login', '') }}"
+           required minlength="3" pattern="[A-Za-zА-Яа-яЁё0-9_]{3,}"
+           autocomplete="username">
+    {% if errors.login %}<p class="error">{{ errors.login }}</p>{% endif %}
+
+    <label for="password">Пароль</label>
+    <input id="password" name="password" type="password" required minlength="8"
+           autocomplete="new-password">
+    {% if errors.password %}<p class="error">{{ errors.password }}</p>{% endif %}
+
+    <label for="password2">Повторите пароль</label>
+    <input id="password2" name="password2" type="password" required minlength="8"
+           autocomplete="new-password">
+    {% if errors.password2 %}<p class="error">{{ errors.password2 }}</p>{% endif %}
+
+    <button class="btn btn--primary btn--block" type="submit">Создать аккаунт</button>
+    <p class="muted">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+  </form>
+</main>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Новая заявка — Корочки.есть{% endblock %}
+
+{% block content %}
+{% set chosen = form.get('course_id') or selected_course %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Модуль 1 · заявка на обучение</p>
+    <h1>Новая заявка</h1>
+    <p class="muted">Выберите курс, дату начала и удобный способ оплаты.</p>
+  </div>
+  <a class="btn btn--ghost" href="{{ url_for('dashboard') }}">← Мои заявки</a>
+</section>
+
+<form method="post" class="card form form--wide" id="application-form" novalidate aria-label="Форма заявки">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+  {% if errors %}
+    <div class="alert alert--error" role="alert">Проверьте форму: {{ errors|length }} ошибок.</div>
+  {% endif %}
+
+  <div class="field">
+    <label for="course_id">Курс</label>
+    <select id="course_id" name="course_id" required
+            {% if errors.course_id %}aria-invalid="true"{% endif %}>
+      <option value="">— выберите курс —</option>
+      {% for course in courses %}
+        <option value="{{ course.course_id }}"
+                {% if chosen == course.course_id %}selected{% endif %}>
+          {{ course.title }} · {{ course.duration_hours }} ч · {{ course.price|money }}
+        </option>
+      {% endfor %}
+    </select>
+    {% if errors.course_id %}<p class="field-error">{{ errors.course_id }}</p>{% endif %}
+  </div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label for="start_date">Желаемая дата начала</label>
+      <input id="start_date" name="start_date" type="text"
+             value="{{ form.get('start_date', '') }}"
+             placeholder="ДД.ММ.ГГГГ" inputmode="numeric" required
+             {% if errors.start_date %}aria-invalid="true"{% endif %}>
+      <p class="field-hint">Например: 15.09.2026</p>
+      {% if errors.start_date %}<p class="field-error">{{ errors.start_date }}</p>{% endif %}
+    </div>
+
+    <fieldset class="field radio-group">
+      <legend>Способ оплаты</legend>
+      <label class="radio">
+        <input type="radio" name="payment_method" value="cash"
+               {% if form.get('payment_method') == 'cash' or not form.get('payment_method') %}checked{% endif %}>
+        <span>Наличными</span>
+      </label>
+      <label class="radio">
+        <input type="radio" name="payment_method" value="phone_transfer"
+               {% if form.get('payment_method') == 'phone_transfer' %}checked{% endif %}>
+        <span>Переводом по номеру телефона</span>
+      </label>
+      {% if errors.payment_method %}<p class="field-error">{{ errors.payment_method }}</p>{% endif %}
+    </fieldset>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn--primary" type="submit">Отправить</button>
+    <a class="btn btn--ghost" href="{{ url_for('dashboard') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

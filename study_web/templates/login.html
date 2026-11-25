@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Вход — ДЭ.Курс{% endblock %}
+
+{% block content %}
+<main class="wrap auth">
+  <form method="post" class="card form" novalidate>
+    <h1>Вход</h1>
+    <p class="muted">Войдите, чтобы открыть свои курсы.</p>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    {% if error %}<div class="alert alert--error">{{ error }}</div>{% endif %}
+
+    <label for="login">Никнейм</label>
+    <input id="login" name="login" value="{{ login_value }}" required autocomplete="username" autofocus>
+
+    <label for="password">Пароль</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+
+    <button class="btn btn--primary btn--block" type="submit">Войти</button>
+    <p class="muted">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+    <p class="hint">Демо: <code>student</code> / <code>password123</code></p>
+  </form>
+</main>
+{% endblock %}
