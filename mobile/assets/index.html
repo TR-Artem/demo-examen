@@ -217,6 +217,8 @@ pre,.theory{
   overflow:auto;font:12.5px/1.6 ui-monospace,Consolas,monospace;
   white-space:pre-wrap;word-break:break-word;-webkit-overflow-scrolling:touch;
 }
+.sql-out h3{color:var(--code-ink);font-size:14px;margin:16px 0 6px}
+.sql-out .muted{color:#9aa0a6}
 .prose-card{padding:22px 24px}
 
 /* ---------- план ---------- */
@@ -320,13 +322,14 @@ th{background:var(--page);color:var(--ink);font-weight:600}
   textarea{min-height:150px}
   button.btn{min-height:44px}
   .row{gap:8px}
-  .row>.btn{flex:1 1 46%;padding-left:12px;padding-right:12px}
+  .row>.btn{flex:1 1 46%;padding-left:10px;padding-right:10px}
   details>summary{min-height:48px}
   .opt{padding:12px;min-height:48px}
   .opt span{font-size:15px}
   .quiz-card h2{font-size:17px;line-height:1.4}
   label.chk{min-height:48px}
-  table{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+  table{white-space:nowrap}
+  .sql-out table{width:max-content;min-width:100%}
   pre,.sql-out{font-size:12px;padding:12px}
   .lesson-nav{
     position:sticky;bottom:0;z-index:30;margin:22px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
@@ -420,7 +423,7 @@ th{background:var(--page);color:var(--ink);font-weight:600}
           <div class="bar"><i id="planBar" style="width:0%"></i></div>
           <p class="muted" id="planInfo">—</p>
           <div class="row" style="margin-top:10px">
-            <button class="btn ghost" id="planThisWeek">Только текущая неделя</button>
+            <button class="btn ghost" id="planThisWeek">Текущая неделя</button>
             <button class="btn ghost" id="planReset">Сбросить план</button>
           </div>
         </div>
@@ -503,7 +506,7 @@ th{background:var(--page);color:var(--ink);font-weight:600}
             <button class="btn ghost" id="sqlClear">Очистить</button>
           </div>
         </div>
-        <div class="card"><pre id="sqlOut">Результат проверки появится здесь.</pre></div>
+        <div class="card"><div id="sqlOut" class="sql-out">Результат проверки появится здесь.</div></div>
       </section>
 
       <!-- ================= ПРОБНИК ================= -->

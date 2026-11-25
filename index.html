@@ -34,6 +34,7 @@
   .topnav{display:flex;gap:20px;flex:1}
   .topnav a{display:inline-flex;align-items:center;min-height:44px;color:#bdbdbd;text-decoration:none;font-size:14px}
   .topnav a:hover{color:#fff}
+  .topnav a.nav-cta{display:none}
   .login{border:1px solid rgba(255,255,255,.28);color:#fff;text-decoration:none;
          display:inline-flex;align-items:center;min-height:38px;
          padding:7px 16px;border-radius:6px;font-size:14px;white-space:nowrap}
@@ -47,6 +48,7 @@
     .brand-text{font-size:18px}
     .login{display:none}
     .menu-btn{display:grid;margin-left:auto;flex:0 0 auto}
+    body.nav-open{overflow:hidden}
     .topnav{
       position:absolute;top:100%;left:0;right:0;display:grid;gap:2px;
       padding:8px 14px calc(12px + env(safe-area-inset-bottom));
@@ -57,6 +59,9 @@
     }
     .topnav a{min-height:48px;padding:0 12px;border-radius:8px;font-size:15px;color:#e3e3e3}
     .topnav a:hover{background:rgba(255,255,255,.07);color:#fff}
+    .topnav a.nav-cta{display:inline-flex;justify-content:center;margin-top:6px;padding:0 14px;
+                      background:var(--green);color:#fff;font-weight:600}
+    .topnav a.nav-cta:hover{background:var(--green-d)}
     body.nav-open .topnav{opacity:1;visibility:visible;transform:none;pointer-events:auto}
   }
 
@@ -166,6 +171,7 @@
     .side .btn{min-height:48px}
     footer{padding:24px 0 calc(24px + env(safe-area-inset-bottom))}
     footer .wrap{flex-direction:column;align-items:flex-start;gap:10px}
+    footer .wrap>span{width:100%}
     footer .wrap>span:last-child{display:flex;flex-wrap:wrap;gap:4px 14px}
     footer a{display:inline-flex;align-items:center;min-height:32px}
   }
@@ -182,6 +188,7 @@
       <a href="docs/">Каталог</a>
       <a href="docs/">Моё обучение</a>
       <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Материалы</a>
+      <a class="nav-cta" href="docs/">Начать курс</a>
     </nav>
     <a class="login" href="docs/">Начать курс</a>
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Открыть меню"
@@ -365,6 +372,9 @@
   });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape") setOpen(false);
+  });
+  document.addEventListener("click", function(e){
+    if(document.body.classList.contains("nav-open") && !e.target.closest(".topbar")) setOpen(false);
   });
   window.addEventListener("resize", function(){
     if(window.innerWidth > 760) setOpen(false);

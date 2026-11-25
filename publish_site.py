@@ -26,20 +26,31 @@ HTML_IS = ROOT / "DemoExam-mobile-is.html"
 BANNER = """
 <div class="course-banner">
   <b>Веб-квалификация 09.02.07-3</b>
-  <a href="DemoExam-mobile-programmer.html" download>Курс «Программист» 09.02.07-2</a>
+  <a href="DemoExam-mobile-programmer.html" download>Курс «Программист»<span class="code"> 09.02.07-2</span></a>
   <a href="DemoExam-mobile.html" download>Скачать веб-версию</a>
 </div>
 <style>
+  :root{--banner-h:40px}
   .course-banner{
-    background:#222;color:#fff;padding:calc(6px + env(safe-area-inset-top)) 12px 6px;
-    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 18px;
-    text-align:center;position:relative;z-index:70;
-    font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    position:fixed;top:0;left:0;right:0;z-index:80;
+    height:calc(var(--banner-h) + env(safe-area-inset-top));
+    box-sizing:border-box;padding:env(safe-area-inset-top) 12px 0;
+    background:#222;color:#fff;
+    display:flex;align-items:center;justify-content:center;gap:0 18px;
+    text-align:center;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
-  .course-banner a{color:#8ab4f8;text-decoration:underline;display:inline-flex;align-items:center;min-height:36px}
-  @media (max-width:560px){
-    .course-banner{font-size:12px;gap:0 16px;padding:calc(4px + env(safe-area-inset-top)) 12px 6px}
-    .course-banner b{width:100%;font-weight:600;color:#cfcfcf;margin-top:2px}
+  .course-banner a{color:#8ab4f8;text-decoration:underline;display:inline-flex;align-items:center;min-height:36px;white-space:nowrap}
+  .course-banner b{white-space:nowrap}
+  .topbar{top:calc(var(--banner-h) + env(safe-area-inset-top))}
+  .shell{padding-top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top))}
+  .sidebar{top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top))}
+  .overlay{inset:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top)) 0 0 0}
+  html{scroll-padding-top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top) + 8px)}
+  @media (max-width:760px){
+    :root{--banner-h:44px}
+    .course-banner{font-size:12.5px;gap:0 14px;padding-left:10px;padding-right:10px}
+    .course-banner b{display:none}
+    .course-banner .code{display:none}
     .course-banner a{min-height:40px}
   }
 </style>
@@ -83,6 +94,7 @@ LANDING = """<!DOCTYPE html>
   .topnav{display:flex;gap:20px;flex:1}
   .topnav a{display:inline-flex;align-items:center;min-height:44px;color:#bdbdbd;text-decoration:none;font-size:14px}
   .topnav a:hover{color:#fff}
+  .topnav a.nav-cta{display:none}
   .login{border:1px solid rgba(255,255,255,.28);color:#fff;text-decoration:none;
          display:inline-flex;align-items:center;min-height:38px;
          padding:7px 16px;border-radius:6px;font-size:14px;white-space:nowrap}
@@ -96,6 +108,7 @@ LANDING = """<!DOCTYPE html>
     .brand-text{font-size:18px}
     .login{display:none}
     .menu-btn{display:grid;margin-left:auto;flex:0 0 auto}
+    body.nav-open{overflow:hidden}
     .topnav{
       position:absolute;top:100%;left:0;right:0;display:grid;gap:2px;
       padding:8px 14px calc(12px + env(safe-area-inset-bottom));
@@ -106,6 +119,9 @@ LANDING = """<!DOCTYPE html>
     }
     .topnav a{min-height:48px;padding:0 12px;border-radius:8px;font-size:15px;color:#e3e3e3}
     .topnav a:hover{background:rgba(255,255,255,.07);color:#fff}
+    .topnav a.nav-cta{display:inline-flex;justify-content:center;margin-top:6px;padding:0 14px;
+                      background:var(--green);color:#fff;font-weight:600}
+    .topnav a.nav-cta:hover{background:var(--green-d)}
     body.nav-open .topnav{opacity:1;visibility:visible;transform:none;pointer-events:auto}
   }
 
@@ -215,6 +231,7 @@ LANDING = """<!DOCTYPE html>
     .side .btn{min-height:48px}
     footer{padding:24px 0 calc(24px + env(safe-area-inset-bottom))}
     footer .wrap{flex-direction:column;align-items:flex-start;gap:10px}
+    footer .wrap>span{width:100%}
     footer .wrap>span:last-child{display:flex;flex-wrap:wrap;gap:4px 14px}
     footer a{display:inline-flex;align-items:center;min-height:32px}
   }
@@ -231,6 +248,7 @@ LANDING = """<!DOCTYPE html>
       <a href="docs/">Каталог</a>
       <a href="docs/">Моё обучение</a>
       <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Материалы</a>
+      <a class="nav-cta" href="docs/">Начать курс</a>
     </nav>
     <a class="login" href="docs/">Начать курс</a>
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Открыть меню"
@@ -414,6 +432,9 @@ LANDING = """<!DOCTYPE html>
   });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape") setOpen(false);
+  });
+  document.addEventListener("click", function(e){
+    if(document.body.classList.contains("nav-open") && !e.target.closest(".topbar")) setOpen(false);
   });
   window.addEventListener("resize", function(){
     if(window.innerWidth > 760) setOpen(false);
