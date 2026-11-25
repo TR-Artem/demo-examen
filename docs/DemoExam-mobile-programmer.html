@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222222">
 <title>ДЭ 09.02.07-2-2027 — Тренажёр</title>
 <style>
@@ -24,11 +24,13 @@ body.dark{
   --code:#0d0f11; --code-ink:#e6e6e6; --shadow:none;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--topbar-h) + 8px)}
 html,body{margin:0;padding:0}
 body{
   background:var(--page); color:var(--ink);
   font:15px/1.55 Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   padding-bottom:env(safe-area-inset-bottom);
+  min-height:100dvh;
 }
 body.menu-open{overflow:hidden}
 a{color:var(--brand)}
@@ -37,7 +39,8 @@ a{color:var(--brand)}
 .topbar{
   position:fixed; inset:0 0 auto 0; height:var(--topbar-h); z-index:60;
   background:var(--topbar); color:#fff; display:flex; align-items:center; gap:14px;
-  padding:0 16px; box-shadow:0 1px 0 rgba(255,255,255,.04);
+  padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));
+  box-shadow:0 1px 0 rgba(255,255,255,.04);
 }
 .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;flex:0 0 auto}
 .brand-mark{
@@ -279,14 +282,17 @@ th{background:var(--page);color:var(--ink);font-weight:600}
   .lesson-nav{margin-left:-28px;margin-right:-28px;padding:14px 28px}
 }
 @media (max-width:760px){
-  :root{--topbar-h:52px}
+  :root{--topbar-h:56px}
   .burger{display:grid;place-items:center}
   .brand-text{display:none}
-  .topbar-title b{font-size:12px}
+  .brand-mark{width:32px;height:32px;border-radius:8px}
+  .topbar{gap:10px}
+  .topbar-title b{font-size:12.5px}
   .topbar-title span{display:none}
   .topbar-progress{display:none}
+  .icon-btn,.burger{width:40px;height:40px;border-radius:8px;font-size:17px}
   .sidebar{
-    width:min(86vw,320px);transform:translateX(-102%);transition:transform .22s ease;
+    width:min(88vw,330px);transform:translateX(-102%);transition:transform .22s ease;
     box-shadow:0 0 40px rgba(0,0,0,.35);bottom:0;
   }
   .shell.open .sidebar{transform:none}
@@ -295,29 +301,49 @@ th{background:var(--page);color:var(--ink);font-weight:600}
     opacity:0;pointer-events:none;transition:opacity .2s ease;
   }
   .shell.open .overlay{opacity:1;pointer-events:auto}
-  .content{margin-left:0;padding:14px 12px 76px}
-  .lesson{padding:22px 18px 0;border-radius:8px}
-  .lesson-title{font-size:23px}
-  .lesson-rule{margin:16px 0 18px}
-  .card{padding:15px 15px}
-  .prose-card{padding:18px 16px}
-  .theory{font-size:15px}
+  #nav button{min-height:50px;padding:12px 16px}
+  .content{margin-left:0;padding:12px 10px calc(88px + env(safe-area-inset-bottom))}
+  .lesson{padding:20px 16px 0;border-radius:8px}
+  .lesson-title{font-size:clamp(20px,5.7vw,23px);line-height:1.22;margin-bottom:7px}
+  .lesson-sub{font-size:13px}
+  .lesson-rule{margin:14px 0 16px}
+  .card{padding:14px}
+  .card h2{font-size:17px}
+  .prose-card{padding:15px 13px}
+  .theory{font-size:15px;line-height:1.7}
+  select,input[type=text],input[type=number],textarea{font-size:16px}
+  textarea{min-height:150px}
+  button.btn{min-height:44px}
+  .row{gap:8px}
+  .row>.btn{flex:1 1 46%;padding-left:12px;padding-right:12px}
+  details>summary{min-height:48px}
+  .opt{padding:12px;min-height:48px}
+  .opt span{font-size:15px}
+  .quiz-card h2{font-size:17px;line-height:1.4}
+  label.chk{min-height:48px}
+  table{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+  pre,.sql-out{font-size:12px;padding:12px}
   .lesson-nav{
-    position:sticky;bottom:0;z-index:30;margin:24px -18px 0;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+    position:sticky;bottom:0;z-index:30;margin:22px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
     border-radius:0;box-shadow:0 -4px 14px rgba(20,30,40,.08);
   }
   .lesson-nav .hint{display:none}
-  .lesson-nav .btn{flex:1;min-height:44px}
-  .exam-top{align-items:center}
+  .lesson-nav .btn{flex:1;min-height:46px;font-size:14px}
+  .exam-top{align-items:center;gap:10px}
   .exam-score{text-align:left}
   .big{font-size:22px}
-  .timer{font-size:24px}
+  .timer{font-size:22px}
+  .kpi{font-size:13.5px}
 }
 @media (max-width:420px){
-  .lesson{padding:18px 14px 0}
-  .lesson-nav{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}
-  .card{padding:14px 13px}
+  .lesson{padding:16px 12px 0}
+  .lesson-nav{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
+  .card{padding:13px 12px}
   .row.spread{align-items:flex-start}
+  .lesson-title{font-size:20px}
+  .topbar-title b{font-size:12px}
+  .content{padding-left:8px;padding-right:8px}
+  .exam-top{gap:8px}
 }
 </style>
 </head>
@@ -369,7 +395,7 @@ th{background:var(--page);color:var(--ink);font-weight:600}
     </div>
 
     <div class="sidebar-foot">
-      <a href="https://github.com/alessstft/Demoexam" target="_blank" rel="noopener">Исходники и материалы на GitHub</a>
+      <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Исходники и материалы на GitHub</a>
       <span>Прогресс сохраняется локально в браузере</span>
     </div>
   </aside>

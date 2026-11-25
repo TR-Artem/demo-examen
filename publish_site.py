@@ -23,18 +23,28 @@ HTML = ROOT / "DemoExam-mobile.html"
 HTML_PROG = ROOT / "DemoExam-mobile-programmer.html"
 
 BANNER = """
-<div style="background:#222;color:#fff;padding:9px 12px;text-align:center;
-            font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-            position:relative;z-index:70">
-  Курс: веб-квалификация 09.02.07-3 ·
-  <a href="DemoExam-mobile-programmer.html" download
-     style="color:#8ab4f8;text-decoration:underline">скачать версию «Программист» 09.02.07-2</a>
-  ·
-  <a href="DemoExam-mobile.html" download style="color:#8ab4f8;text-decoration:underline">скачать веб-версию</a>
+<div class="course-banner">
+  <b>Веб-квалификация 09.02.07-3</b>
+  <a href="DemoExam-mobile-programmer.html" download>Курс «Программист» 09.02.07-2</a>
+  <a href="DemoExam-mobile.html" download>Скачать веб-версию</a>
 </div>
+<style>
+  .course-banner{
+    background:#222;color:#fff;padding:calc(6px + env(safe-area-inset-top)) 12px 6px;
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 18px;
+    text-align:center;position:relative;z-index:70;
+    font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .course-banner a{color:#8ab4f8;text-decoration:underline;display:inline-flex;align-items:center;min-height:36px}
+  @media (max-width:560px){
+    .course-banner{font-size:12px;gap:0 16px;padding:calc(4px + env(safe-area-inset-top)) 12px 6px}
+    .course-banner b{width:100%;font-weight:600;color:#cfcfcf;margin-top:2px}
+    .course-banner a{min-height:40px}
+  }
+</style>
 """
-REPO = "https://github.com/alessstft/Demoexam"
-SITE = "https://alessstft.github.io/Demoexam/"
+REPO = "https://github.com/TR-Artem/demo-examen"
+SITE = "https://tr-artem.github.io/demo-examen/"
 
 LANDING = """<!DOCTYPE html>
 <html lang="ru">
@@ -47,30 +57,56 @@ LANDING = """<!DOCTYPE html>
   :root{
     --brand:#4485ed; --brand-d:#2f6fd0; --green:#54ad54; --green-d:#469a46;
     --topbar:#222; --page:#f3f4f6; --card:#fff; --ink:#222; --muted:#777;
-    --line:#e6e8eb; --soft:#eef4ff; --code:#1e1e1e;
+    --line:#e6e8eb; --soft:#eef4ff; --code:#1e1e1e; --header-h:56px;
   }
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   html,body{margin:0;padding:0}
   body{background:var(--page);color:var(--ink);
-       font:15px/1.6 Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+       font:15px/1.6 Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+       overflow-x:hidden}
   a{color:var(--brand)}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 clamp(14px,4vw,20px)}
+  code{background:#eceff3;padding:1px 5px;border-radius:4px;font-size:.9em;overflow-wrap:anywhere}
 
   /* шапка */
-  .topbar{background:var(--topbar);color:#fff;height:50px;display:flex;align-items:center}
-  .topbar .wrap{display:flex;align-items:center;gap:22px;width:100%}
-  .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;flex:0 0 auto}
+  .topbar{background:var(--topbar);color:#fff;min-height:var(--header-h);
+          display:flex;align-items:center;position:sticky;top:0;z-index:60;
+          box-shadow:0 1px 0 rgba(255,255,255,.06)}
+  .topbar .wrap{display:flex;align-items:center;gap:18px;width:100%}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;flex:0 0 auto;min-height:44px}
   .brand-mark{width:30px;height:30px;border-radius:7px;background:var(--brand);
               display:grid;place-items:center;font-size:11px;font-weight:800}
   .brand-text{font-size:20px;font-weight:700;letter-spacing:-.5px}
   .brand-text span{color:#8ab4f8;font-weight:400}
   .topnav{display:flex;gap:20px;flex:1}
-  .topnav a{color:#bdbdbd;text-decoration:none;font-size:14px}
+  .topnav a{display:inline-flex;align-items:center;min-height:44px;color:#bdbdbd;text-decoration:none;font-size:14px}
   .topnav a:hover{color:#fff}
   .login{border:1px solid rgba(255,255,255,.28);color:#fff;text-decoration:none;
-         padding:7px 16px;border-radius:5px;font-size:14px;white-space:nowrap}
+         display:inline-flex;align-items:center;min-height:38px;
+         padding:7px 16px;border-radius:6px;font-size:14px;white-space:nowrap}
   .login:hover{background:rgba(255,255,255,.08)}
-  @media (max-width:720px){.topnav{display:none}.brand-text{font-size:18px}}
+  .menu-btn{display:none;width:42px;height:42px;padding:0;border-radius:8px;
+            border:1px solid #3a3a3a;background:#2c2c2c;color:#fff;font-size:18px;
+            line-height:1;cursor:pointer;place-items:center}
+  .menu-btn:active{background:#3a3a3a}
+  .menu-btn[aria-expanded="true"]{background:#3a3a3a}
+  @media (max-width:760px){
+    .brand-text{font-size:18px}
+    .login{display:none}
+    .menu-btn{display:grid;margin-left:auto;flex:0 0 auto}
+    .topnav{
+      position:absolute;top:100%;left:0;right:0;display:grid;gap:2px;
+      padding:8px 14px calc(12px + env(safe-area-inset-bottom));
+      background:var(--topbar);border-top:1px solid #333;
+      box-shadow:0 14px 28px rgba(0,0,0,.28);
+      opacity:0;visibility:hidden;transform:translateY(-6px);pointer-events:none;
+      transition:opacity .16s ease,transform .16s ease,visibility .16s;
+    }
+    .topnav a{min-height:48px;padding:0 12px;border-radius:8px;font-size:15px;color:#e3e3e3}
+    .topnav a:hover{background:rgba(255,255,255,.07);color:#fff}
+    body.nav-open .topnav{opacity:1;visibility:visible;transform:none;pointer-events:auto}
+  }
 
   main{padding:22px 0 60px}
   .crumbs{font-size:12.5px;color:var(--muted);margin-bottom:18px}
@@ -81,14 +117,14 @@ LANDING = """<!DOCTYPE html>
   /* обложка курса */
   .hero{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start;margin-bottom:34px}
   .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
-  h1{font-size:34px;line-height:1.18;margin:0 0 14px;letter-spacing:-.4px}
-  .lead{font-size:16px;color:#555;margin:0 0 16px;max-width:620px}
+  h1{font-size:clamp(1.45rem,5.8vw,2.125rem);line-height:1.18;margin:0 0 14px;letter-spacing:-.4px;overflow-wrap:break-word}
+  .lead{font-size:clamp(14.5px,3.7vw,16px);color:#555;margin:0 0 16px;max-width:620px}
   .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
   .tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--brand-d)}
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
-       padding:11px 22px;border-radius:6px;font-size:14.5px;font-weight:500;border:1px solid transparent;
-       transition:background .12s,border-color .12s}
+  .btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;
+       min-height:44px;padding:11px 22px;border-radius:6px;font-size:14.5px;font-weight:500;
+       border:1px solid transparent;transition:background .12s,border-color .12s}
   .btn.primary{background:var(--green);color:#fff}
   .btn.primary:hover{background:var(--green-d)}
   .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
@@ -98,7 +134,7 @@ LANDING = """<!DOCTYPE html>
   .stat span{font-size:12px;color:var(--muted)}
 
   .hero-card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
-             box-shadow:0 2px 8px rgba(20,30,40,.06);position:sticky;top:20px}
+             box-shadow:0 2px 8px rgba(20,30,40,.06);position:sticky;top:calc(var(--header-h) + 16px)}
   .cover{height:156px;background:linear-gradient(135deg,#1f2b3a 0%,#22405e 55%,#2f6f4f 100%);
          color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:20px}
   .cover b{font-size:32px;line-height:1;letter-spacing:-1px}
@@ -132,7 +168,7 @@ LANDING = """<!DOCTYPE html>
   .feature b{display:block;font-size:13.5px;margin-bottom:3px}
   .feature span{font-size:12.5px;color:var(--muted);line-height:1.45}
   .note{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.55}
-  .side .card{position:sticky;top:20px}
+  .side .card{position:sticky;top:calc(var(--header-h) + 16px)}
   .side .kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
   .side .kpi:last-child{border-bottom:0}
   .side .kpi b{font-weight:600}
@@ -147,15 +183,39 @@ LANDING = """<!DOCTYPE html>
   @media (max-width:900px){
     .hero,.layout{grid-template-columns:1fr}
     .hero-card,.side .card{position:static}
-    h1{font-size:28px}
+  }
+  @media (max-width:760px){
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}
+    .stat b{font-size:20px}
+    .hero-card{margin-top:2px}
+    .cover{height:104px;padding:16px}
+    .cover b{font-size:26px}
+    .hero-card .body{padding:16px}
+    .checklist li{font-size:12.5px}
   }
   @media (max-width:560px){
-    h1{font-size:24px}
-    .lead{font-size:15px}
-    .features{grid-template-columns:1fr}
-    .stats{gap:18px}
-    .card{padding:18px 16px}
-    main{padding-top:16px}
+    main{padding:16px 0 44px}
+    .crumbs{display:flex;align-items:center;white-space:nowrap;overflow-x:auto;
+            scrollbar-width:none;font-size:12px;margin-bottom:14px;padding-bottom:2px}
+    .crumbs::-webkit-scrollbar{display:none}
+    .crumbs span{margin:0 5px}
+    h1{margin-bottom:10px}
+    .lead{margin-bottom:14px}
+    .tags{gap:6px;margin-bottom:18px}
+    .tag{font-size:11.5px;padding:4px 9px}
+    .actions{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:20px}
+    .actions .btn{width:100%;min-height:48px;font-size:15px}
+    .card{padding:16px 14px;margin-bottom:14px}
+    h2{font-size:18px}
+    .features{grid-template-columns:1fr;gap:8px}
+    .feature{padding:12px 13px}
+    .program-item{gap:10px}
+    .note{font-size:12px}
+    .side .btn{min-height:48px}
+    footer{padding:24px 0 calc(24px + env(safe-area-inset-bottom))}
+    footer .wrap{flex-direction:column;align-items:flex-start;gap:10px}
+    footer .wrap>span:last-child{display:flex;flex-wrap:wrap;gap:4px 14px}
+    footer a{display:inline-flex;align-items:center;min-height:32px}
   }
 </style>
 </head>
@@ -166,12 +226,14 @@ LANDING = """<!DOCTYPE html>
       <span class="brand-mark">ДЭ</span>
       <span class="brand-text">.Курс</span>
     </a>
-    <nav class="topnav">
+    <nav class="topnav" id="topnav">
       <a href="docs/">Каталог</a>
       <a href="docs/">Моё обучение</a>
-      <a href="https://github.com/alessstft/Demoexam" target="_blank" rel="noopener">Материалы</a>
+      <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Материалы</a>
     </nav>
     <a class="login" href="docs/">Начать курс</a>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Открыть меню"
+            aria-controls="topnav" aria-expanded="false">☰</button>
   </div>
 </header>
 
@@ -300,7 +362,7 @@ LANDING = """<!DOCTYPE html>
           <div class="kpi"><span>Язык</span><b>русский</b></div>
           <a class="btn primary" href="docs/">Перейти к курсу</a>
           <a class="btn ghost" href="DemoExam-mobile.html" download>Скачать HTML · ~1 МБ</a>
-          <a class="btn ghost" href="https://github.com/alessstft/Demoexam" target="_blank" rel="noopener">Исходники на GitHub</a>
+          <a class="btn ghost" href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Исходники на GitHub</a>
         </div>
       </aside>
     </div>
@@ -310,9 +372,34 @@ LANDING = """<!DOCTYPE html>
 <footer>
   <div class="wrap">
     <span>ДЭ.Курс · подготовка к демонстрационному экзамену 09.02.07</span>
-    <span><a href="docs/">Тренажёр</a> · <a href="https://github.com/alessstft/Demoexam" target="_blank" rel="noopener">GitHub</a> · <a href="https://bom.firpo.ru/Public" target="_blank" rel="noopener">Банк оценочных материалов</a></span>
+    <span><a href="docs/">Тренажёр</a> · <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">GitHub</a> · <a href="https://bom.firpo.ru/Public" target="_blank" rel="noopener">Банк оценочных материалов</a></span>
   </div>
 </footer>
+<script>
+(function(){
+  var btn = document.getElementById("menuBtn");
+  var nav = document.getElementById("topnav");
+  if(!btn || !nav) return;
+  function setOpen(open){
+    document.body.classList.toggle("nav-open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.setAttribute("aria-label", open ? "Закрыть меню" : "Открыть меню");
+    btn.textContent = open ? "✕" : "☰";
+  }
+  btn.addEventListener("click", function(){
+    setOpen(!document.body.classList.contains("nav-open"));
+  });
+  nav.addEventListener("click", function(e){
+    if(e.target.closest("a")) setOpen(false);
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") setOpen(false);
+  });
+  window.addEventListener("resize", function(){
+    if(window.innerWidth > 760) setOpen(false);
+  });
+})();
+</script>
 </body>
 </html>
 """

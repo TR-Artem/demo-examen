@@ -70,7 +70,7 @@ run.bat           # Windows
 
 ### 3. Сайт и мобильная версия
 
-- GitHub Pages: <https://alessstft.github.io/Demoexam/>
+- GitHub Pages: <https://tr-artem.github.io/demo-examen/>
 - Офлайн-HTML `DemoExam-mobile.html` — веб-курс.
 - Офлайн-HTML `DemoExam-mobile-programmer.html` — курс «Программист».
 - APK `DemoExam-09-02-07.apk` — архив старой сборки; для занятий

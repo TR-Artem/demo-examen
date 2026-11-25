@@ -1,6 +1,6 @@
 # Сайт на GitHub Pages: веб-версия + офлайн HTML
 
-Сайт уже работает: **https://alessstft.github.io/Demoexam/**
+Сайт уже работает: **https://tr-artem.github.io/demo-examen/**
 
 GitHub Pages раздаёт ветку `main` (корень). На главной лежит `index.html` —
 страница курса в стиле Stepik: описание, программа и кнопки запуска.

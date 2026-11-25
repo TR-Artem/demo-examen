@@ -1,12 +1,12 @@
 # Как сделать релиз на GitHub
 
 Репозиторий уже создан и всё залито:
-**https://github.com/alessstft/Demoexam** (ветка `main`).
+**https://github.com/TR-Artem/demo-examen** (ветка `main`).
 Осталось создать релиз и прикрепить офлайн-HTML (APK — архивная версия).
 
 ## Вариант 1. Через сайт GitHub (проще всего, без команд)
 
-1. Открой **https://github.com/alessstft/Demoexam/releases/new**
+1. Открой **https://github.com/TR-Artem/demo-examen/releases/new**
    (или на странице репозитория справа: **Releases → Draft a new release**).
 2. **Choose a tag** → впиши `v2.0.0` → нажми
    **«Create new tag: v2.0.0 on publish»**.
@@ -19,7 +19,7 @@
 6. Нажми **Publish release**.
 
 Готово: ссылка вида
-`https://github.com/alessstft/Demoexam/releases/tag/v2.0.0`
+`https://github.com/TR-Artem/demo-examen/releases/tag/v2.0.0`
 — её можно отправить себе в Telegram и открыть на телефоне.
 
 > GitHub сам добавит к релизу архивы исходников (`Source code.zip`).
@@ -34,7 +34,7 @@ git tag -a v2.0.0 -m "ДЭ 09.02.07-3-2027: веб-тренажёр, Flask-пр�
 git push origin v2.0.0
 ```
 
-Потом открой `https://github.com/alessstft/Demoexam/releases/new`,
+Потом открой `https://github.com/TR-Artem/demo-examen/releases/new`,
 выбери существующий тег `v2.0.0`, заполни заголовок/описание и прикрепи DemoExam-mobile.html и DemoExam-mobile-programmer.html.
 
 Проверить теги:
