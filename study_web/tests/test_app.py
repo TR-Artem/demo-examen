@@ -69,6 +69,7 @@ class StudyAppTest(unittest.TestCase):
         text = page.get_data(as_text=True)
         self.assertIn("Веб и мультимедиа", text)
         self.assertIn("Программист", text)
+        self.assertIn("Информационные системы", text)
         self.assertNotIn("Заявк", text)
         self.assertNotIn("₽", text)
 
@@ -117,6 +118,16 @@ class StudyAppTest(unittest.TestCase):
             data={"task_id": task["id"], "user_sql": task["expected"]})
         self.assertEqual(response.status_code, 200)
         self.assertIn("Верно", response.get_data(as_text=True))
+
+    def test_is_course(self):
+        self.login()
+        page = self.client.get("/course/is", follow_redirects=True)
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Введение, ER и база данных", page.get_data(as_text=True))
+
+        content = self.client.get("/course/is/content")
+        self.assertEqual(content.status_code, 200)
+        self.assertIn("Специалист по информационным системам", content.get_data(as_text=True))
 
     def test_programmer_content(self):
         self.login()

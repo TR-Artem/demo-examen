@@ -14,6 +14,9 @@ ALIASES = {
     "3": "web",
     "09.02.07-3": "web",
     "09.02.07-3-2027": "web",
+    "5": "is",
+    "09.02.07-5": "is",
+    "09.02.07-5-2027": "is",
 }
 
 COURSES = {
@@ -27,7 +30,13 @@ COURSES = {
         "module": "course_programmer",
         "title": "Программист",
         "code": "09.02.07-2-2027",
-        "subtitle": "Python + SQLite + tkinter · 5 заданий",
+        "subtitle": "Python + SQLite + tkinter · 4 модуля",
+    },
+    "is": {
+        "module": "course_is",
+        "title": "Информационные системы",
+        "code": "09.02.07-5-2027",
+        "subtitle": "ER, SQL, ИС, API · 6 заданий",
     },
 }
 

@@ -36,6 +36,13 @@ COURSES = {
                        "SQL-практика, тесты и пробник.",
         "file": BASE / "DemoExam-mobile-programmer.html",
     },
+    "is": {
+        "title": "Информационные системы",
+        "code": "09.02.07-5",
+        "description": "ER, SQL, авторизация, API и Postman: шесть заданий "
+                       "профильного экзамена.",
+        "file": BASE / "DemoExam-mobile-is.html",
+    },
 }
 
 

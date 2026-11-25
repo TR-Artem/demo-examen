@@ -21,6 +21,7 @@ DOCS = ROOT / "docs"
 APK = ROOT / "DemoExam-09-02-07.apk"
 HTML = ROOT / "DemoExam-mobile.html"
 HTML_PROG = ROOT / "DemoExam-mobile-programmer.html"
+HTML_IS = ROOT / "DemoExam-mobile-is.html"
 
 BANNER = """
 <div class="course-banner">
@@ -330,6 +331,22 @@ LANDING = """<!DOCTYPE html>
         </section>
 
         <section class="card">
+          <h2>Третий курс: «Информационные системы» (09.02.07-5)</h2>
+          <p>
+            Для квалификации «Специалист по информационным системам»:
+            <b>ER, SQL, авторизация, API, Postman и документация</b>,
+            шесть заданий КИМ 2027. В курсе 15 уроков, 39 вопросов,
+            19 SQL-задач и чек-лист на 100 баллов.
+          </p>
+          <div class="actions">
+            <a class="btn ghost" href="DemoExam-mobile-is.html" download>Скачать офлайн-версию</a>
+          </div>
+          <p class="note">
+            На компьютере: <code>./run.sh is</code> или <code>run_is.bat</code>.
+          </p>
+        </section>
+
+        <section class="card">
           <h2>Программа курса</h2>
           <div class="program">
             <div class="module">Модуль 1 · Подготовка</div>
@@ -416,6 +433,8 @@ def main():
     shutil.copy2(HTML, DOCS / HTML.name)
     if HTML_PROG.exists():
         shutil.copy2(HTML_PROG, DOCS / HTML_PROG.name)
+    if HTML_IS.exists():
+        shutil.copy2(HTML_IS, DOCS / HTML_IS.name)
 
     (ROOT / "index.html").write_text(LANDING, encoding="utf-8")
     (ROOT / ".nojekyll").write_text("", encoding="utf-8")
@@ -428,6 +447,9 @@ def main():
     if HTML_PROG.exists():
         print("  ", DOCS / HTML_PROG.name,
               f"{(DOCS / HTML_PROG.name).stat().st_size / 1024 / 1024:.2f} МБ")
+    if HTML_IS.exists():
+        print("  ", DOCS / HTML_IS.name,
+              f"{(DOCS / HTML_IS.name).stat().st_size / 1024 / 1024:.2f} МБ")
     print("Сайт:", SITE)
 
 

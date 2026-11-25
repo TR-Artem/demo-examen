@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Проверка курсов по официальным КОД 2026. Запуск: python verify_courses.py"""
+"""Проверка курсов по официальным КИМ/КОД. Запуск: python verify_courses.py"""
 from __future__ import annotations
 
 import importlib.util
@@ -27,6 +27,7 @@ def check(name: str, ok: bool, detail: str = "") -> None:
 def main() -> None:
     web = load(ROOT / "course2027.py")
     prog = load(ROOT / "course_programmer.py")
+    infosys = load(ROOT / "course_is.py")
 
     # --- Веб: критерии 25 + 25 + 25 + 25 ---
     groups = {}
@@ -100,6 +101,25 @@ def main() -> None:
     check("программист-html: 4 модуля", "4 модуля" in prog_html)
     check("программист-html: 41 вопрос", "41 вопросов" in prog_html)
     check("программист-html: без «5 заданий»", "5 заданий" not in prog_html)
+
+    # --- Информационные системы: 6 заданий, 3:30, 75 + 25 ---
+    check("ИС: всего 100",
+          sum(w for _, items in infosys.CRITERIA for _, w in items) == 100)
+    check("ИС: 6 заданий", "6 заданий" in infosys.LESSONS[0][2])
+    check("ИС: 3 ч 30 мин", "3 ч 30" in infosys.LESSONS[0][4])
+    check("ИС: 75 и 25", "75" in infosys.LESSONS[0][4] and "25" in infosys.LESSONS[0][4])
+    check("ИС: 39 вопросов", len(infosys.QUIZ) == 39, str(len(infosys.QUIZ)))
+    check("ИС: без дублей вопросов",
+          len({q["q"] for q in infosys.QUIZ}) == len(infosys.QUIZ))
+    check("ИС: 11 таблиц",
+          all(f"CREATE TABLE {t}" in infosys.SCHEMA_SQL for t in (
+              "roles", "users", "customers", "specifications", "products",
+              "materials", "product_materials", "operations",
+              "product_operations", "orders", "order_items")))
+    check("ИС: SQL-задачи выполняются", sql_ok(infosys))
+    is_html = (ROOT / "DemoExam-mobile-is.html").read_text(encoding="utf-8")
+    check("ИС-html: 6 заданий", "6 заданий" in is_html)
+    check("ИС-html: 39 вопросов", "39 вопросов" in is_html)
 
     print("\nВСЕ ПРОВЕРКИ ПРОЙДЕНЫ")
 
