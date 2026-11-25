@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import (Flask, Response, abort, flash, g, redirect,
                    render_template, request, session, url_for)
@@ -56,6 +57,15 @@ def _prev_url(slug: str, module_no: int, step_no: int, modules) -> str | None:
     return None
 
 
+def _safe_next(value: str | None) -> str | None:
+    if not value:
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme or parsed.netloc or not value.startswith("/"):
+        return None
+    return value
+
+
 def _next_url(slug: str, module_no: int, step_no: int, modules) -> str:
     if step_no < len(modules[module_no - 1]["steps"]):
         return url_for("step", slug=slug, module_no=module_no,
@@ -100,27 +110,30 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/")
     def index():
-        if g.user is None:
-            return redirect(url_for("login"))
-        return redirect(url_for("courses"))
+        return render_template("courses.html", courses=COURSES)
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
         users = UserRepository(db.get_db())
         errors: dict[str, str] = {}
         form: dict = {}
+        next_url = _safe_next(request.values.get("next"))
         if request.method == "POST":
             form, errors = validate_registration(request.form, users)
             if not errors:
                 users.create(form["login"], hash_password(form["password"]))
                 flash("Аккаунт создан. Войдите в систему.", "success")
+                if next_url:
+                    return redirect(url_for("login", next=next_url))
                 return redirect(url_for("login"))
-        return render_template("register.html", errors=errors, form=form)
+        return render_template("register.html", errors=errors, form=form,
+                               next_url=next_url or "")
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        next_url = _safe_next(request.values.get("next"))
         if g.user is not None:
-            return redirect(url_for("courses"))
+            return redirect(next_url or url_for("courses"))
         error = None
         login_value = ""
         if request.method == "POST":
@@ -132,9 +145,11 @@ def create_app(test_config: dict | None = None) -> Flask:
                 session["user_id"] = user.user_id
                 get_csrf_token()
                 flash("Вы вошли в аккаунт.", "success")
-                return redirect(url_for("courses"))
+                return redirect(next_url or url_for("courses"))
             error = "Неверный никнейм или пароль."
-        return render_template("login.html", error=error, login_value=login_value)
+        return render_template("login.html", error=error,
+                               login_value=login_value,
+                               next_url=next_url or "")
 
     @app.post("/logout")
     @login_required
@@ -144,7 +159,6 @@ def create_app(test_config: dict | None = None) -> Flask:
         return redirect(url_for("login"))
 
     @app.get("/courses")
-    @login_required
     def courses():
         return render_template("courses.html", courses=COURSES)
 

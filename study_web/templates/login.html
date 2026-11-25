@@ -7,6 +7,7 @@
     <h1>Вход</h1>
     <p class="muted">Войдите, чтобы открыть свои курсы.</p>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next_url }}">
 
     {% if error %}<div class="alert alert--error">{{ error }}</div>{% endif %}
 
@@ -17,7 +18,7 @@
     <input id="password" name="password" type="password" required autocomplete="current-password">
 
     <button class="btn btn--primary btn--block" type="submit">Войти</button>
-    <p class="muted">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+    <p class="muted">Нет аккаунта? <a href="{{ url_for('register', next=next_url) }}">Зарегистрироваться</a></p>
     <p class="hint">Демо: <code>student</code> / <code>password123</code></p>
   </form>
 </main>

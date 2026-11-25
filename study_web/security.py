@@ -63,6 +63,9 @@ def login_required(view):
     def wrapper(*args, **kwargs):
         if g.user is None:
             flash("Сначала войдите в аккаунт.", "error")
-            return redirect(url_for("login"))
+            target = request.path
+            if request.query_string:
+                target += "?" + request.query_string.decode()
+            return redirect(url_for("login", next=target))
         return view(*args, **kwargs)
     return wrapper

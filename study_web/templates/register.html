@@ -7,6 +7,7 @@
     <h1>Регистрация</h1>
     <p class="muted">Достаточно никнейма и пароля.</p>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next_url }}">
 
     {% if errors %}<div class="alert alert--error">Проверьте форму.</div>{% endif %}
 
@@ -27,7 +28,7 @@
     {% if errors.password2 %}<p class="error">{{ errors.password2 }}</p>{% endif %}
 
     <button class="btn btn--primary btn--block" type="submit">Создать аккаунт</button>
-    <p class="muted">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+    <p class="muted">Уже есть аккаунт? <a href="{{ url_for('login', next=next_url) }}">Войти</a></p>
   </form>
 </main>
 {% endblock %}

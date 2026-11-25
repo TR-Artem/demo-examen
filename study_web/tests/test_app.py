@@ -34,10 +34,18 @@ class StudyAppTest(unittest.TestCase):
             "/login", data={"login": login, "password": password},
             follow_redirects=False)
 
-    def test_root_redirects_to_login(self):
+    def test_root_shows_courses(self):
         response = self.client.get("/")
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login", response.headers["Location"])
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        self.assertIn("Веб и мультимедиа", text)
+        self.assertIn("Программист", text)
+        self.assertIn("Информационные системы", text)
+
+    def test_courses_public(self):
+        response = self.client.get("/courses")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Выберите курс", response.get_data(as_text=True))
 
     def test_registration(self):
         response = self.client.post("/register", data={
@@ -72,6 +80,20 @@ class StudyAppTest(unittest.TestCase):
         self.assertIn("Информационные системы", text)
         self.assertNotIn("Заявк", text)
         self.assertNotIn("₽", text)
+
+    def test_login_redirects_to_selected_course(self):
+        response = self.client.get("/course/web", follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login", response.headers["Location"])
+        self.assertIn("next=", response.headers["Location"])
+
+        response = self.client.post("/login", data={
+            "login": "student",
+            "password": "password123",
+            "next": "/course/web",
+        }, follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/course/web", response.headers["Location"])
 
     def test_course_modules_and_content(self):
         self.login()
@@ -148,7 +170,7 @@ class StudyAppTest(unittest.TestCase):
     def test_logout(self):
         self.login()
         self.client.post("/logout")
-        response = self.client.get("/courses", follow_redirects=False)
+        response = self.client.get("/course/web", follow_redirects=False)
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login", response.headers["Location"])
 
