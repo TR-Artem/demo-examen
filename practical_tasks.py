@@ -2117,6 +2117,446 @@ IS = [
             ),
         },
     },
+    {
+        "id": "is-auth-login",
+        "module": 3,
+        "step": 2,
+        "topic": "ИС",
+        "title": "Вход с ролями и блокировкой",
+        "level": "сложное",
+        "language": "python",
+        "task": (
+            "Реализуй login(conn, login, password) для экзаменационного модуля: "
+            "найди пользователя, проверь блокировку и пароль. При успехе сбрось "
+            "счётчик ошибок и верни роль, при ошибке увеличь счётчик, а после "
+            "третьей неудачи заблокируй учётную запись."
+        ),
+        "requirements": [
+            "Поиск пользователя по login",
+            "Заблокированный пользователь → ('blocked', None)",
+            "Неверный пароль → ('error', None) и failed_attempts += 1",
+            "Третья ошибка ставит is_blocked = 1",
+            "Успех → ('ok', role_name) и сброс счётчика",
+            "commit после изменений",
+        ],
+        "starter": (
+            "def login(conn, login: str, password: str):\n"
+            "    # верни ('ok', роль), ('error', None) или ('blocked', None)\n"
+            "    ...\n"
+        ),
+        "hint": (
+            "Выбери password, is_blocked, failed_attempts, role_name из users "
+            "WHERE login = ?. Если строки нет — ('error', None). Если is_blocked — "
+            "('blocked', None). После третьей ошибки выполни UPDATE ... SET is_blocked = 1."
+        ),
+        "solution": (
+            "def login(conn, login: str, password: str):\n"
+            "    row = conn.execute(\n"
+            "        'SELECT password, is_blocked, failed_attempts, role_name '\n"
+            "        'FROM users WHERE login = ?',\n"
+            "        (login,),\n"
+            "    ).fetchone()\n"
+            "    if row is None:\n"
+            "        return 'error', None\n"
+            "    stored, blocked, attempts, role = row\n"
+            "    if blocked:\n"
+            "        return 'blocked', None\n"
+            "    if stored == password:\n"
+            "        conn.execute(\n"
+            "            'UPDATE users SET failed_attempts = 0 WHERE login = ?',\n"
+            "            (login,),\n"
+            "        )\n"
+            "        conn.commit()\n"
+            "        return 'ok', role\n"
+            "    attempts += 1\n"
+            "    now_blocked = attempts >= 3\n"
+            "    conn.execute(\n"
+            "        'UPDATE users SET failed_attempts = ?, is_blocked = ? WHERE login = ?',\n"
+            "        (attempts, int(now_blocked), login),\n"
+            "    )\n"
+            "    conn.commit()\n"
+            "    return ('blocked' if now_blocked else 'error'), None\n"
+        ),
+        "check": {
+            "type": "python",
+            "offline_require": [
+                {"label": "def login", "pattern": r"def\s+login\s*\("},
+                {"label": "SELECT из users", "pattern": r"SELECT[\s\S]*FROM\s+users"},
+                {"label": "проверка блокировки", "pattern": r"is_blocked"},
+                {"label": "счётчик ошибок", "pattern": r"failed_attempts"},
+                {"label": "порог 3", "pattern": r">=\s*3"},
+                {"label": "UPDATE и commit", "pattern": r"UPDATE\s+users[\s\S]*commit\s*\("},
+                {"label": "возврат роли", "pattern": r"return\s+[\"']ok[\"']"},
+            ],
+            "tests": (
+                "import sqlite3\n"
+                "con = sqlite3.connect(':memory:')\n"
+                "con.execute('CREATE TABLE users (login TEXT PRIMARY KEY, password TEXT, role_name TEXT, is_blocked INTEGER, failed_attempts INTEGER)')\n"
+                "con.execute(\"INSERT INTO users VALUES ('admin', 'admin123', 'Администратор', 0, 0)\")\n"
+                "con.execute(\"INSERT INTO users VALUES ('user1', 'user123', 'Пользователь', 1, 3)\")\n"
+                "print(login(con, 'admin', 'admin123'))\n"
+                "print(login(con, 'admin', 'wrong'))\n"
+                "print(login(con, 'admin', 'wrong'))\n"
+                "print(login(con, 'admin', 'wrong'))\n"
+                "print(login(con, 'admin', 'admin123'))\n"
+                "print(login(con, 'user1', 'user123'))\n"
+                "print(login(con, 'nobody', 'x'))\n"
+            ),
+            "expected_output": (
+                "('ok', 'Администратор')\n"
+                "('error', None)\n"
+                "('error', None)\n"
+                "('blocked', None)\n"
+                "('blocked', None)\n"
+                "('blocked', None)\n"
+                "('error', None)"
+            ),
+        },
+    },
+    {
+        "id": "is-captcha-puzzle",
+        "module": 3,
+        "step": 4,
+        "topic": "ИС",
+        "title": "Капча-пазл и попытки",
+        "level": "среднее",
+        "language": "python",
+        "task": (
+            "Реализуй проверку капчи-пазла: puzzle_solved(user_order, correct_order) "
+            "сравнивает последовательность фрагментов, а captcha_attempt(attempts, solved) "
+            "сбрасывает счётчик при успехе и блокирует после трёх неудач."
+        ),
+        "requirements": [
+            "puzzle_solved сравнивает порядок фрагментов",
+            "Успешная сборка → (0, True)",
+            "Неудача увеличивает счётчик",
+            "Флаг блокировки при attempts >= 3",
+            "Возврат кортежа (attempts, allowed)",
+        ],
+        "starter": (
+            "def puzzle_solved(user_order, correct_order) -> bool:\n"
+            "    # сравни последовательности\n"
+            "    ...\n\n"
+            "def captcha_attempt(attempts: int, solved: bool):\n"
+            "    # верни (новое число попыток, доступ разрешён)\n"
+            "    ...\n"
+        ),
+        "hint": (
+            "list(user_order) == list(correct_order). В captcha_attempt: "
+            "if solved: return 0, True; затем attempts += 1; return attempts, attempts < 3."
+        ),
+        "solution": (
+            "def puzzle_solved(user_order, correct_order) -> bool:\n"
+            "    return list(user_order) == list(correct_order)\n\n"
+            "def captcha_attempt(attempts: int, solved: bool):\n"
+            "    if solved:\n"
+            "        return 0, True\n"
+            "    attempts += 1\n"
+            "    return attempts, attempts < 3\n"
+        ),
+        "check": {
+            "type": "python",
+            "offline_require": [
+                {"label": "def puzzle_solved", "pattern": r"def\s+puzzle_solved\s*\("},
+                {"label": "сравнение последовательностей", "pattern": r"list\s*\(\s*user_order\s*\)\s*==\s*list\s*\(\s*correct_order\s*\)"},
+                {"label": "def captcha_attempt", "pattern": r"def\s+captcha_attempt\s*\("},
+                {"label": "сброс при успехе", "pattern": r"if\s+solved\s*:\s*[\s\S]*?return\s+0\s*,\s*True"},
+                {"label": "увеличение попыток", "pattern": r"attempts\s*\+=\s*1"},
+                {"label": "порог 3", "pattern": r"attempts\s*<\s*3|attempts\s*>=\s*3"},
+            ],
+            "tests": (
+                "print(puzzle_solved([1, 2, 3, 4], [1, 2, 3, 4]))\n"
+                "print(puzzle_solved([1, 2, 4, 3], [1, 2, 3, 4]))\n"
+                "print(captcha_attempt(0, True))\n"
+                "print(captcha_attempt(0, False))\n"
+                "print(captcha_attempt(2, False))\n"
+                "print(captcha_attempt(5, False))\n"
+            ),
+            "expected_output": "True\nFalse\n(0, True)\n(1, True)\n(3, False)\n(6, False)",
+        },
+    },
+    {
+        "id": "is-api-mask",
+        "module": 3,
+        "step": 6,
+        "topic": "API",
+        "title": "Маскирование персональных данных",
+        "level": "сложное",
+        "language": "python",
+        "task": (
+            "Перед отдачей API нельзя показывать персональные данные в исходном "
+            "виде. Реализуй mask_phone, mask_email и mask_inn по образцу: "
+            "+7(495)***-**-11, i***@mebelplus.ru, ***4567."
+        ),
+        "requirements": [
+            "mask_phone сохраняет код +7(495) и последние 2 цифры",
+            "mask_email оставляет первую букву и домен",
+            "mask_inn оставляет последние 4 цифры",
+            "Некорректные значения не должны ронять программу",
+        ],
+        "starter": (
+            "import re\n\n"
+            "def mask_phone(phone: str) -> str:\n"
+            "    # +7(495)111-11-11 → +7(495)***-**-11\n"
+            "    ...\n\n"
+            "def mask_email(email: str) -> str:\n"
+            "    # info@mebelplus.ru → i***@mebelplus.ru\n"
+            "    ...\n\n"
+            "def mask_inn(inn: str) -> str:\n"
+            "    # 7701234567 → ***4567\n"
+            "    ...\n"
+        ),
+        "hint": (
+            "Для телефона удобно выражение r'(\\+7\\(\\d{3}\\))\\d{3}-\\d{2}-(\\d{2})'. "
+            "Для email: local, domain = email.split('@', 1); local[0] + '***@' + domain. "
+            "Для ИНН: '***' + inn[-4:]."
+        ),
+        "solution": (
+            "import re\n\n"
+            "def mask_phone(phone: str) -> str:\n"
+            "    match = re.match(r'(\\+7\\(\\d{3}\\))\\d{3}-\\d{2}-(\\d{2})', phone)\n"
+            "    if not match:\n"
+            "        return phone\n"
+            "    return f'{match.group(1)}***-**-{match.group(2)}'\n\n"
+            "def mask_email(email: str) -> str:\n"
+            "    if '@' not in email or not email.split('@', 1)[0]:\n"
+            "        return email\n"
+            "    local, domain = email.split('@', 1)\n"
+            "    return f'{local[0]}***@{domain}'\n\n"
+            "def mask_inn(inn: str) -> str:\n"
+            "    return '***' + inn[-4:] if inn else inn\n"
+        ),
+        "check": {
+            "type": "python",
+            "offline_require": [
+                {"label": "def mask_phone", "pattern": r"def\s+mask_phone\s*\("},
+                {"label": "def mask_email", "pattern": r"def\s+mask_email\s*\("},
+                {"label": "def mask_inn", "pattern": r"def\s+mask_inn\s*\("},
+                {"label": "маска телефона ***", "pattern": r"\*\*\*-\*\*-"},
+                {"label": "домен email", "pattern": r"@\{?domain|@.*domain|split\s*\(\s*[\"']@[\"']"},
+                {"label": "последние 4 цифры ИНН", "pattern": r"\[-4:\]"},
+            ],
+            "tests": (
+                "print(mask_phone('+7(495)111-11-11'))\n"
+                "print(mask_phone('+7(812)222-22-22'))\n"
+                "print(mask_email('info@mebelplus.ru'))\n"
+                "print(mask_email('smirnov@mail.ru'))\n"
+                "print(mask_inn('7701234567'))\n"
+            ),
+            "expected_output": (
+                "+7(495)***-**-11\n"
+                "+7(812)***-**-22\n"
+                "i***@mebelplus.ru\n"
+                "s***@mail.ru\n"
+                "***4567"
+            ),
+        },
+    },
+    {
+        "id": "is-postman-tests",
+        "module": 4,
+        "step": 2,
+        "topic": "API",
+        "title": "Postman: коллекция с негативными тестами",
+        "level": "сложное",
+        "language": "json",
+        "task": (
+            "Собери коллекцию Postman из трёх запросов: список заказчиков, "
+            "карточка заказчика и несуществующий id. Добавь тесты на 200, JSON, "
+            "маскирование телефона и 404."
+        ),
+        "requirements": [
+            "Валидный JSON коллекции",
+            "Три GET-запроса: /api/customers, /1, /999",
+            "Тест статуса 200 и JSON",
+            "Проверка маски *** в теле телефона",
+            "Тест 404 для несуществующего id",
+        ],
+        "starter": (
+            "{\n"
+            "  \"info\": {\"name\": \"IS API\"},\n"
+            "  \"item\": []\n"
+            "}\n"
+        ),
+        "hint": (
+            "В item положи три объекта. В event.listen='test' используй "
+            "pm.test('status 200', () => pm.response.to.have.status(200)); "
+            "pm.test('masked', () => pm.expect(pm.response.json()[0].phone).to.include('***')); "
+            "и отдельный тест status 404 для /api/customers/999."
+        ),
+        "solution": (
+            "{\n"
+            "  \"info\": {\"name\": \"IS API customers\"},\n"
+            "  \"item\": [\n"
+            "    {\n"
+            "      \"name\": \"Список заказчиков\",\n"
+            "      \"request\": {\"method\": \"GET\", \"url\": \"{{baseUrl}}/api/customers\"},\n"
+            "      \"event\": [{\"listen\": \"test\", \"script\": {\"exec\": [\n"
+            "        \"pm.test('status 200', () => pm.response.to.have.status(200));\",\n"
+            "        \"pm.test('JSON', () => pm.response.to.be.json);\",\n"
+            "        \"pm.test('masked phone', () => pm.expect(pm.response.json()[0].phone).to.include('***'));\"\n"
+            "      ]}}]\n"
+            "    },\n"
+            "    {\n"
+            "      \"name\": \"Заказчик 1\",\n"
+            "      \"request\": {\"method\": \"GET\", \"url\": \"{{baseUrl}}/api/customers/1\"},\n"
+            "      \"event\": [{\"listen\": \"test\", \"script\": {\"exec\": [\n"
+            "        \"pm.test('status 200', () => pm.response.to.have.status(200));\"\n"
+            "      ]}}]\n"
+            "    },\n"
+            "    {\n"
+            "      \"name\": \"Несуществующий заказчик\",\n"
+            "      \"request\": {\"method\": \"GET\", \"url\": \"{{baseUrl}}/api/customers/999\"},\n"
+            "      \"event\": [{\"listen\": \"test\", \"script\": {\"exec\": [\n"
+            "        \"pm.test('status 404', () => pm.response.to.have.status(404));\"\n"
+            "      ]}}]\n"
+            "    }\n"
+            "  ]\n"
+            "}\n"
+        ),
+        "check": {
+            "type": "json",
+            "keys": ["info", "item"],
+            "list_len": {"item": 3},
+            "require": [
+                {"label": "три GET-запроса", "pattern": r"\"method\"\s*:\s*\"GET\""},
+                {"label": "URL списка", "pattern": r"/api/customers(?![0-9/])"},
+                {"label": "URL заказчика 1", "pattern": r"/api/customers/1\b"},
+                {"label": "URL 999", "pattern": r"/api/customers/999"},
+                {"label": "pm.test", "pattern": r"pm\.test\s*\("},
+                {"label": "статус 200", "pattern": r"status\s*\(\s*200\s*\)"},
+                {"label": "статус 404", "pattern": r"status\s*\(\s*404\s*\)"},
+                {"label": "проверка маски", "pattern": r"include\(\s*['\"]\*\*\*"},
+                {"label": "JSON-ответ", "pattern": r"to\.be\.json|response\.json\("},
+            ],
+        },
+    },
+    {
+        "id": "is-testcases",
+        "module": 4,
+        "step": 4,
+        "topic": "Документы",
+        "title": "Тест-кейсы для приёмки",
+        "level": "среднее",
+        "language": "text",
+        "task": (
+            "Оформи тест-кейсы для сдачи экзаменационного проекта: вход, "
+            "капча, блокировка после трёх ошибок, API 200 с маскированием, "
+            "API 404 и создание заказа. Укажи действие, ожидаемый и фактический "
+            "результат, статус."
+        ),
+        "requirements": [
+            "Заголовок и таблица тест-кейсов",
+            "Колонки: действие, ожидаемый результат, фактический результат, статус",
+            "Минимум 6 сценариев",
+            "Есть вход, капча и блокировка",
+            "Есть API 200 и 404",
+            "Есть создание заказа",
+        ],
+        "starter": "# Тест-кейсы\n\n| № | Действие | Ожидаемый результат | Фактический результат | Статус |\n|---|---|---|---|---|\n",
+        "hint": (
+            "Для каждого сценария опиши конкретное действие: «Ввести неверный пароль "
+            "3 раза», «Открыть GET /api/customers/999». В фактическом результате "
+            "напиши «Совпадает» или «Пройден»."
+        ),
+        "solution": (
+            "# Тест-кейсы\n\n"
+            "| № | Действие | Ожидаемый результат | Фактический результат | Статус |\n"
+            "|---|---|---|---|---|\n"
+            "| 1 | Ввести верный логин и пароль | Открывается главная страница, роль сохранена | Совпадает | Пройден |\n"
+            "| 2 | Собрать капчу-пазл верно | Доступ к форме входа разрешён | Совпадает | Пройден |\n"
+            "| 3 | Ввести неверный пароль 3 раза | Учётная запись заблокирована | Совпадает | Пройден |\n"
+            "| 4 | GET /api/customers | 200, телефон и email замаскированы | Совпадает | Пройден |\n"
+            "| 5 | GET /api/customers/999 | 404 и JSON с ошибкой | Совпадает | Пройден |\n"
+            "| 6 | Создать заказ с двумя позициями | Заказ и позиции сохранены в БД | Совпадает | Пройден |\n"
+        ),
+        "check": {
+            "type": "patterns",
+            "require": [
+                {"label": "заголовок", "pattern": r"^#\s+\S"},
+                {"label": "колонка «Действие»", "pattern": r"Действие"},
+                {"label": "колонка «Ожидаемый результат»", "pattern": r"Ожидаемый\s+результат"},
+                {"label": "колонка «Фактический результат»", "pattern": r"Фактический\s+результат"},
+                {"label": "колонка «Статус»", "pattern": r"Статус"},
+                {"label": "вход", "pattern": r"логин|вход|пароль"},
+                {"label": "капча", "pattern": r"капч"},
+                {"label": "блокировка", "pattern": r"блокир"},
+                {"label": "API 200", "pattern": r"\b200\b"},
+                {"label": "API 404", "pattern": r"\b404\b"},
+                {"label": "создание заказа", "pattern": r"заказ"},
+            ],
+        },
+    },
+    {
+        "id": "is-import-json",
+        "module": 4,
+        "step": 9,
+        "topic": "API",
+        "title": "Импорт заказчиков из JSON",
+        "level": "сложное",
+        "language": "python",
+        "task": (
+            "Реализуй import_customers(conn, data): загрузи список заказчиков "
+            "из JSON в SQLite. Повторяющийся ИНН пропускай через INSERT OR IGNORE, "
+            "фиксируй транзакцию и верни число добавленных записей."
+        ),
+        "requirements": [
+            "Цикл по списку словарей",
+            "INSERT OR IGNORE INTO customers",
+            "Параметризованный запрос с 5 полями",
+            "conn.commit()",
+            "Возврат количества вставленных строк",
+        ],
+        "starter": (
+            "def import_customers(conn, data: list) -> int:\n"
+            "    # вставь заказчиков и верни количество\n"
+            "    ...\n"
+        ),
+        "hint": (
+            "cur = conn.execute('INSERT OR IGNORE INTO customers "
+            "(name, inn, address, phone, email) VALUES (?, ?, ?, ?, ?)', (...)); "
+            "добавляй cur.rowcount к счётчику. В конце commit и return."
+        ),
+        "solution": (
+            "def import_customers(conn, data: list) -> int:\n"
+            "    inserted = 0\n"
+            "    for item in data:\n"
+            "        cur = conn.execute(\n"
+            "            'INSERT OR IGNORE INTO customers '\n"
+            "            '(name, inn, address, phone, email) VALUES (?, ?, ?, ?, ?)',\n"
+            "            (item['name'], item['inn'], item['address'],\n"
+            "             item['phone'], item['email']),\n"
+            "        )\n"
+            "        inserted += cur.rowcount\n"
+            "    conn.commit()\n"
+            "    return inserted\n"
+        ),
+        "check": {
+            "type": "python",
+            "offline_require": [
+                {"label": "def import_customers", "pattern": r"def\s+import_customers\s*\("},
+                {"label": "INSERT OR IGNORE", "pattern": r"INSERT\s+OR\s+IGNORE\s+INTO\s+customers"},
+                {"label": "5 параметров", "pattern": r"VALUES\s*\(\s*\?[\s\S]*\?[\s\S]*\?[\s\S]*\?[\s\S]*\?"},
+                {"label": "цикл по data", "pattern": r"for\s+\w+\s+in\s+data"},
+                {"label": "rowcount", "pattern": r"rowcount"},
+                {"label": "commit", "pattern": r"\.commit\s*\(\s*\)"},
+                {"label": "возврат счётчика", "pattern": r"return\s+inserted"},
+            ],
+            "tests": (
+                "import sqlite3\n"
+                "con = sqlite3.connect(':memory:')\n"
+                "con.execute('CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, name TEXT, inn TEXT UNIQUE, address TEXT, phone TEXT, email TEXT)')\n"
+                "data = [\n"
+                "    {'name': 'ООО «Мебель Плюс»', 'inn': '7701234567', 'address': 'Москва', 'phone': '+7(495)111-11-11', 'email': 'info@mebelplus.ru'},\n"
+                "    {'name': 'ИП Смирнов', 'inn': '770234567890', 'address': 'СПб', 'phone': '+7(812)222-22-22', 'email': 'smirnov@mail.ru'},\n"
+                "    {'name': 'Дубль', 'inn': '7701234567', 'address': 'Москва', 'phone': '+7(495)000-00-00', 'email': 'dup@mail.ru'},\n"
+                "]\n"
+                "print(import_customers(con, data))\n"
+                "print(con.execute('SELECT COUNT(*) FROM customers').fetchone()[0])\n"
+            ),
+            "expected_output": "2\n2",
+        },
+    },
 ]
 
 COURSES = {

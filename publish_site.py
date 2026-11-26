@@ -23,38 +23,178 @@ HTML = ROOT / "DemoExam-mobile.html"
 HTML_PROG = ROOT / "DemoExam-mobile-programmer.html"
 HTML_IS = ROOT / "DemoExam-mobile-is.html"
 
-BANNER = """
-<div class="course-banner">
-  <b>Веб-квалификация 09.02.07-3</b>
-  <a href="DemoExam-mobile-programmer.html" download>Курс «Программист»<span class="code"> 09.02.07-2</span></a>
-  <a href="DemoExam-mobile.html" download>Скачать веб-версию</a>
+COURSE_CHOOSER = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#222222">
+<title>ДЭ 09.02.07-2027 — выбор курса</title>
+<style>
+  :root{
+    --brand:#4485ed; --brand-d:#2f6fd0; --green:#54ad54; --green-d:#469a46;
+    --topbar:#222; --page:#f3f4f6; --card:#fff; --ink:#222; --muted:#6b7280;
+    --line:#e5e7eb; --soft:#eef4ff; --header-h:56px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--page);color:var(--ink);
+       font:15px/1.6 Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+  a{color:var(--brand)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 clamp(14px,4vw,20px)}
+  .topbar{background:var(--topbar);color:#fff;min-height:var(--header-h);
+          display:flex;align-items:center;position:sticky;top:0;z-index:60}
+  .topbar .wrap{display:flex;align-items:center;gap:18px;width:100%}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff}
+  .brand-mark{width:30px;height:30px;border-radius:7px;background:var(--brand);
+              display:grid;place-items:center;font-size:11px;font-weight:800}
+  .brand-text{font-size:20px;font-weight:700;letter-spacing:-.5px}
+  .brand-text span{color:#8ab4f8;font-weight:400}
+  .topbar nav{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}
+  .topbar nav a{color:#cfd8e3;text-decoration:none;font-size:14px}
+  .topbar nav a:hover{color:#fff}
+  main{padding:34px 0 60px}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--brand);margin:0 0 8px}
+  h1{font-size:clamp(1.7rem,4vw,2.3rem);line-height:1.15;margin:0 0 10px;letter-spacing:-.5px}
+  .lead{font-size:16px;color:#555;max-width:760px;margin:0 0 26px}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .course-card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+               padding:22px 20px;display:flex;flex-direction:column;
+               box-shadow:0 4px 16px rgba(15,23,42,.05)}
+  .course-card--is{border-top:4px solid #0ea5e9}
+  .course-card--web{border-top:4px solid var(--green)}
+  .course-card--prog{border-top:4px solid #f59e0b}
+  .code{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+        color:var(--muted);margin-bottom:8px}
+  .course-card h2{margin:0 0 8px;font-size:1.2rem;line-height:1.25}
+  .course-card p{margin:0 0 14px;color:#555;font-size:.92rem}
+  .stats{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:6px}
+  .stats li{font-size:.86rem;color:#374151;display:flex;gap:8px;align-items:flex-start}
+  .stats li:before{content:"✓";color:var(--green);font-weight:800}
+  .actions{margin-top:auto;display:grid;gap:8px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;text-align:center;
+       text-decoration:none;min-height:44px;padding:10px 16px;border-radius:8px;
+       font-size:14px;font-weight:600;border:1px solid transparent}
+  .btn.primary{background:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green-d)}
+  .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn.ghost:hover{background:#f7f8fa}
+  .note{margin-top:24px;padding:16px 18px;border-radius:12px;background:#fff;
+        border:1px solid var(--line);font-size:.9rem;color:#555}
+  .note b{color:var(--ink)}
+  footer{padding:24px 0;color:var(--muted);font-size:13px;text-align:center}
+  @media (max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:680px){
+    .grid{grid-template-columns:1fr}
+    main{padding:22px 0 40px}
+    .topbar nav{gap:12px}
+    .course-card{padding:18px 16px}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../index.html" aria-label="ДЭ.Курс">
+      <span class="brand-mark">ДЭ</span><span class="brand-text">.Курс</span>
+    </a>
+    <nav>
+      <a href="../index.html">О курсе</a>
+      <a href="https://github.com/TR-Artem/demo-examen" target="_blank" rel="noopener">Материалы</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <p class="eyebrow">Демонстрационный экзамен · 09.02.07 · 2027</p>
+  <h1>Выберите курс подготовки</h1>
+  <p class="lead">Три квалификации в одном тренажёре. Все курсы открываются прямо на сайте:
+    теория, тесты с практическими заданиями, SQL-практика и пробный экзамен.</p>
+
+  <div class="grid">
+    <article class="course-card course-card--web">
+      <div class="code">09.02.07-3</div>
+      <h2>Веб и мультимедиа</h2>
+      <p>Flask, SQLite, HTML/CSS/JS. Три модуля экзамена и полный стек веб-разработки.</p>
+      <ul class="stats">
+        <li>53 вопроса и 14 практик с кодом</li>
+        <li>19 SQL-задач с автопроверкой</li>
+        <li>Пробник на 100 баллов · 4 часа</li>
+      </ul>
+      <div class="actions">
+        <a class="btn primary" href="DemoExam-mobile.html">Открыть онлайн</a>
+        <a class="btn ghost" href="DemoExam-mobile.html" download>Скачать офлайн-HTML</a>
+      </div>
+    </article>
+
+    <article class="course-card course-card--prog">
+      <div class="code">09.02.07-2</div>
+      <h2>Программист</h2>
+      <p>Python, SQLite и tkinter на примере магазина обуви. Четыре модуля КОД 2026.</p>
+      <ul class="stats">
+        <li>41 вопрос и 11 практик с кодом</li>
+        <li>19 SQL-задач и CRUD-сценарии</li>
+        <li>Пробник и чек-лист на 100 баллов</li>
+      </ul>
+      <div class="actions">
+        <a class="btn primary" href="DemoExam-mobile-programmer.html">Открыть онлайн</a>
+        <a class="btn ghost" href="DemoExam-mobile-programmer.html" download>Скачать офлайн-HTML</a>
+      </div>
+    </article>
+
+    <article class="course-card course-card--is">
+      <div class="code">09.02.07-5</div>
+      <h2>Информационные системы</h2>
+      <p>ER, SQL, авторизация, API, Postman и документация. Шесть заданий КИМ 2027.</p>
+      <ul class="stats">
+        <li>39 вопросов и 15 практик с кодом</li>
+        <li>19 SQL-задач: себестоимость и заказы</li>
+        <li>Импорт JSON, API и тест-кейсы</li>
+      </ul>
+      <div class="actions">
+        <a class="btn primary" href="DemoExam-mobile-is.html">Открыть онлайн</a>
+        <a class="btn ghost" href="DemoExam-mobile-is.html" download>Скачать офлайн-HTML</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="note"><b>Как это работает.</b> Онлайн-версия открывается в браузере и сохраняет
+    прогресс в localStorage. Офлайн-HTML можно скачать и заниматься без интернета.
+    Для курса «Информационные системы» доступны все шесть экзаменационных заданий:
+    ER-диаграмма, импорт JSON, SQL-стоимость заказа, вход с капчей и блокировкой,
+    API с маскированием данных, Postman и проектная документация.</div>
+</main>
+<footer>ДЭ.Курс · подготовка к демонстрационному экзамену 09.02.07</footer>
+</body>
+</html>
+"""
+
+SWITCHER = """
+<div class="course-switch" role="navigation" aria-label="Выбор курса">
+  <a href="./">← Все курсы</a>
+  <a href="DemoExam-mobile.html">Веб</a>
+  <a href="DemoExam-mobile-programmer.html">Программист</a>
+  <a href="DemoExam-mobile-is.html">ИС</a>
 </div>
 <style>
-  :root{--banner-h:40px}
-  .course-banner{
-    position:fixed;top:0;left:0;right:0;z-index:80;
-    height:calc(var(--banner-h) + env(safe-area-inset-top));
-    box-sizing:border-box;padding:env(safe-area-inset-top) 12px 0;
-    background:#222;color:#fff;
-    display:flex;align-items:center;justify-content:center;gap:0 18px;
-    text-align:center;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  .course-switch{
+    position:fixed;right:12px;bottom:12px;z-index:100;
+    display:flex;flex-wrap:wrap;gap:2px;align-items:center;
+    padding:4px;border-radius:10px;background:rgba(34,34,34,.92);
+    box-shadow:0 6px 20px rgba(0,0,0,.25);
+    font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
-  .course-banner a{color:#8ab4f8;text-decoration:underline;display:inline-flex;align-items:center;min-height:36px;white-space:nowrap}
-  .course-banner b{white-space:nowrap}
-  .topbar{top:calc(var(--banner-h) + env(safe-area-inset-top))}
-  .shell{padding-top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top))}
-  .sidebar{top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top))}
-  .overlay{inset:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top)) 0 0 0}
-  html{scroll-padding-top:calc(var(--topbar-h) + var(--banner-h) + env(safe-area-inset-top) + 8px)}
-  @media (max-width:760px){
-    :root{--banner-h:44px}
-    .course-banner{font-size:12.5px;gap:0 14px;padding-left:10px;padding-right:10px}
-    .course-banner b{display:none}
-    .course-banner .code{display:none}
-    .course-banner a{min-height:40px}
+  .course-switch a{color:#dbeafe;text-decoration:none;padding:5px 8px;border-radius:7px}
+  .course-switch a:hover{background:rgba(255,255,255,.1);color:#fff}
+  .course-switch a:first-child{color:#93c5fd}
+  @media (max-width:560px){
+    .course-switch{right:8px;bottom:8px;font-size:11px;max-width:calc(100vw - 16px)}
+    .course-switch a{padding:4px 6px}
   }
 </style>
 """
+
+
 REPO = "https://github.com/TR-Artem/demo-examen"
 SITE = "https://tr-artem.github.io/demo-examen/"
 
@@ -281,9 +421,9 @@ LANDING = """<!DOCTYPE html>
           <span class="tag">офлайн</span>
         </div>
         <div class="actions">
-          <a class="btn primary" href="docs/">Начать обучение</a>
+          <a class="btn primary" href="docs/">Выбрать курс</a>
           <a class="btn ghost" href="DemoExam-mobile.html" download>Скачать офлайн HTML</a>
-          <a class="btn ghost" href="DemoExam-mobile-programmer.html" download>Курс «Программист»</a>
+          <a class="btn ghost" href="docs/DemoExam-mobile-is.html">Курс «Информационные системы»</a>
         </div>
         <div class="stats">
           <div class="stat"><b>60</b><span>занятий</span></div>
@@ -343,6 +483,7 @@ LANDING = """<!DOCTYPE html>
             с 11 практическими заданиями, SQL-практика и чек-лист на 100 баллов.
           </p>
           <div class="actions">
+            <a class="btn primary" href="docs/DemoExam-mobile-programmer.html">Открыть онлайн</a>
             <a class="btn ghost" href="DemoExam-mobile-programmer.html" download>Скачать офлайн-версию</a>
           </div>
           <p class="note">
@@ -357,9 +498,10 @@ LANDING = """<!DOCTYPE html>
             Для квалификации «Специалист по информационным системам»:
             <b>ER, SQL, авторизация, API, Postman и документация</b>,
             шесть заданий КИМ 2027. В курсе 15 уроков, 39 вопросов,
-            9 практических заданий, 19 SQL-задач и чек-лист на 100 баллов.
+            15 практических заданий, 19 SQL-задач и чек-лист на 100 баллов.
           </p>
           <div class="actions">
+            <a class="btn primary" href="docs/DemoExam-mobile-is.html">Открыть онлайн</a>
             <a class="btn ghost" href="DemoExam-mobile-is.html" download>Скачать офлайн-версию</a>
           </div>
           <p class="note">
@@ -448,32 +590,30 @@ LANDING = """<!DOCTYPE html>
 
 def main():
     DOCS.mkdir(exist_ok=True)
-    html = HTML.read_text(encoding="utf-8")
-    if "course-banner" not in html:
-        html = html.replace("<body>", '<body>\n<!-- course-banner -->' + BANNER, 1)
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
-    (DOCS / "index.html").write_text(html, encoding="utf-8")
+    (DOCS / "index.html").write_text(COURSE_CHOOSER, encoding="utf-8")
     shutil.copy2(APK, DOCS / APK.name)
-    shutil.copy2(HTML, DOCS / HTML.name)
-    if HTML_PROG.exists():
-        shutil.copy2(HTML_PROG, DOCS / HTML_PROG.name)
-    if HTML_IS.exists():
-        shutil.copy2(HTML_IS, DOCS / HTML_IS.name)
+    for source in (HTML, HTML_PROG, HTML_IS):
+        if not source.exists():
+            continue
+        target = DOCS / source.name
+        shutil.copy2(source, target)
+        text = target.read_text(encoding="utf-8")
+        if "course-switch" not in text:
+            text = text.replace("</body>", SWITCHER + "\n</body>", 1)
+            target.write_text(text, encoding="utf-8")
 
     (ROOT / "index.html").write_text(LANDING, encoding="utf-8")
     (ROOT / ".nojekyll").write_text("", encoding="utf-8")
 
     print("Готово:")
     print("  ", ROOT / "index.html", "(главная: страница курса)")
-    print("  ", DOCS / "index.html", f"{ (DOCS / 'index.html').stat().st_size / 1024 / 1024:.2f} МБ")
+    print("  ", DOCS / "index.html", "(выбор из трёх курсов)")
     print("  ", DOCS / APK.name, f"{APK.stat().st_size / 1024:.0f} КБ (архив)")
-    print("  ", DOCS / HTML.name, f"{(DOCS / HTML.name).stat().st_size / 1024 / 1024:.2f} МБ")
-    if HTML_PROG.exists():
-        print("  ", DOCS / HTML_PROG.name,
-              f"{(DOCS / HTML_PROG.name).stat().st_size / 1024 / 1024:.2f} МБ")
-    if HTML_IS.exists():
-        print("  ", DOCS / HTML_IS.name,
-              f"{(DOCS / HTML_IS.name).stat().st_size / 1024 / 1024:.2f} МБ")
+    for source in (HTML, HTML_PROG, HTML_IS):
+        if source.exists():
+            target = DOCS / source.name
+            print("  ", target, f"{target.stat().st_size / 1024 / 1024:.2f} МБ")
     print("Сайт:", SITE)
 
 

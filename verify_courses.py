@@ -130,6 +130,18 @@ def main() -> None:
     check("ИС-html: 39 вопросов", "39 вопросов" in is_html)
     check("ИС-html: практика в тестах", "is-exam-json" in is_html and "practiceSel" in is_html)
 
+    # --- Сайт: выбор трёх курсов онлайн ---
+    chooser = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
+    for name in ("DemoExam-mobile.html", "DemoExam-mobile-programmer.html",
+                 "DemoExam-mobile-is.html"):
+        check(f"сайт: онлайн-ссылка на {name}", f'href="{name}"' in chooser)
+    check("сайт: ИС открывается без скачивания",
+          "Открыть онлайн" in chooser and "Информационные системы" in chooser)
+    for name in ("DemoExam-mobile.html", "DemoExam-mobile-programmer.html",
+                 "DemoExam-mobile-is.html"):
+        page = (ROOT / "docs" / name).read_text(encoding="utf-8")
+        check(f"сайт: переключатель курсов на {name}", "course-switch" in page)
+
     print("\nВСЕ ПРОВЕРКИ ПРОЙДЕНЫ")
 
 

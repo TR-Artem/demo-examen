@@ -31,22 +31,22 @@ COURSES = {
     "web": {
         "title": "Веб и мультимедиа",
         "code": "09.02.07-3",
-        "description": "Flask, SQLite, HTML/CSS/JS: три модуля экзамена, "
-                       "SQL-практика, тесты и пробник.",
+        "description": "Flask, SQLite, HTML/CSS/JS: 3 модуля, 53 вопроса, "
+                       "14 практик с кодом, SQL-практика и пробник.",
         "file": BASE / "DemoExam-mobile.html",
     },
     "programmer": {
         "title": "Программист",
         "code": "09.02.07-2",
-        "description": "Python, SQLite, tkinter: четыре модуля экзамена, "
-                       "SQL-практика, тесты и пробник.",
+        "description": "Python, SQLite, tkinter: 4 модуля, 41 вопрос, "
+                       "11 практик с кодом, SQL-практика и пробник.",
         "file": BASE / "DemoExam-mobile-programmer.html",
     },
     "is": {
         "title": "Информационные системы",
         "code": "09.02.07-5",
-        "description": "ER, SQL, авторизация, API и Postman: шесть заданий "
-                       "профильного экзамена.",
+        "description": "ER, SQL, авторизация, API и Postman: 6 заданий, 39 вопросов, "
+                       "15 практик с кодом и SQL по себестоимости.",
         "file": BASE / "DemoExam-mobile-is.html",
     },
 }

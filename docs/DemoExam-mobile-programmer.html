@@ -1428,5 +1428,29 @@ el("prReset").onclick=()=>{ if(confirm("Удалить весь прогресс
 renderProgress();
 updateChrome();
 </script>
+
+<div class="course-switch" role="navigation" aria-label="Выбор курса">
+  <a href="./">← Все курсы</a>
+  <a href="DemoExam-mobile.html">Веб</a>
+  <a href="DemoExam-mobile-programmer.html">Программист</a>
+  <a href="DemoExam-mobile-is.html">ИС</a>
+</div>
+<style>
+  .course-switch{
+    position:fixed;right:12px;bottom:12px;z-index:100;
+    display:flex;flex-wrap:wrap;gap:2px;align-items:center;
+    padding:4px;border-radius:10px;background:rgba(34,34,34,.92);
+    box-shadow:0 6px 20px rgba(0,0,0,.25);
+    font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .course-switch a{color:#dbeafe;text-decoration:none;padding:5px 8px;border-radius:7px}
+  .course-switch a:hover{background:rgba(255,255,255,.1);color:#fff}
+  .course-switch a:first-child{color:#93c5fd}
+  @media (max-width:560px){
+    .course-switch{right:8px;bottom:8px;font-size:11px;max-width:calc(100vw - 16px)}
+    .course-switch a{padding:4px 6px}
+  }
+</style>
+
 </body>
 </html>
