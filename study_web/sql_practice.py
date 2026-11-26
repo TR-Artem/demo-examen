@@ -49,9 +49,10 @@ def check(module, task, user_sql: str):
     if not user_sql:
         return False, "Напишите SQL-запрос.", [], []
 
+    schema = task.get("schema_sql", module.SCHEMA_SQL)
     try:
         ref = sqlite3.connect(":memory:")
-        ref.executescript(module.SCHEMA_SQL)
+        ref.executescript(schema)
         if task.get("mode") == "script":
             ref.executescript(task["expected"])
             expected_cols, expected = _fetch(ref, task["verify"])
@@ -60,7 +61,7 @@ def check(module, task, user_sql: str):
         ref.close()
 
         con = sqlite3.connect(":memory:")
-        con.executescript(module.SCHEMA_SQL)
+        con.executescript(schema)
         if task.get("mode") == "script":
             con.executescript(user_sql)
             actual_cols, actual = _fetch(con, task["verify"])

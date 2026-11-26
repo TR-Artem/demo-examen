@@ -24,6 +24,8 @@ from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
 import courses
+import practical
+import practical_tasks
 
 # ---------------------------------------------------------------------------
 # Константы
@@ -49,6 +51,7 @@ DEFAULT_STATE = {
     "theory_read": [],
     "quiz": {"asked": 0, "correct": 0, "by_topic": {}},
     "sql_done": [],
+    "practical_done": [],
     "exam_checks": [],
     "exam_attempts": [],
     "thresholds": {"3": 50, "4": 70, "5": 90},
@@ -1101,6 +1104,8 @@ def load_state():
                 state[key] = value
         except (json.JSONDecodeError, OSError):
             pass
+    if not isinstance(state.get("practical_done"), list):
+        state["practical_done"] = []
     return state
 
 
@@ -1480,6 +1485,8 @@ class Trainer(tk.Tk):
         ttk.Button(top, text="10 случайных", command=lambda: self.start_quiz(10)).pack(side="left", padx=4)
         ttk.Button(top, text="Экзамен: 20 вопросов", style="Accent.TButton",
                    command=lambda: self.start_quiz(20)).pack(side="left", padx=4)
+        ttk.Button(top, text="⌨ Практика по теме",
+                   command=self.open_practical).pack(side="left", padx=(10, 4))
         self.quiz_score = ttk.Label(top, text="", foreground=MUTED)
         self.quiz_score.pack(side="right")
 
@@ -1540,7 +1547,9 @@ class Trainer(tk.Tk):
             self.quiz_feedback_set(
                 f"Результат: {self.quiz_session['correct']} из {self.quiz_session['asked']} "
                 f"({self.quiz_session['correct'] / max(1, self.quiz_session['asked']) * 100:.0f}%). "
-                "Слабые места смотри в «Мой прогресс» → повтори теорию.")
+                "Слабые места смотри в «Мой прогресс» → повтори теорию.\n\n"
+                "Закрепи тему кнопкой «⌨ Практика по теме»: там нужно написать код "
+                "и пройти автопроверку.")
             return
         self.quiz_current = self.quiz_queue.pop(0)
         item = self.quiz_current
@@ -1589,7 +1598,123 @@ class Trainer(tk.Tk):
             text=f"Осталось {len(self.quiz_queue)}  ·  верно {self.quiz_session['correct']}/{self.quiz_session['asked']}")
         self.refresh_progress_tab()
 
-    # -- 4. SQL-ПРАКТИКА ----------------------------------------------------
+    # -- 3b. ПРАКТИКА К ТЕСТАМ ---------------------------------------------
+    def open_practical(self):
+        """Окно практического задания с редактором и автопроверкой."""
+        topic = self.quiz_topic.get()
+        if topic == "Все темы":
+            tasks = practical_tasks.all_for(COURSE_KEY)
+        else:
+            tasks = practical_tasks.for_topic(COURSE_KEY, topic)
+        if not tasks:
+            messagebox.showinfo("Практика", "Для этой темы пока нет заданий.")
+            return
+
+        win = tk.Toplevel(self)
+        win.title(f"Практика · {topic} · {COURSE_TITLE}")
+        win.geometry("980x780")
+        win.configure(bg=BG)
+        win.transient(self)
+
+        top = ttk.Frame(win, padding=(12, 10, 12, 4))
+        top.pack(fill="x")
+        ttk.Label(top, text="Задание:", font=("Segoe UI", 10, "bold")).pack(side="left")
+        task_var = tk.StringVar(value=tasks[0]["title"])
+        combo = ttk.Combobox(top, textvariable=task_var, state="readonly",
+                             width=54, values=[t["title"] for t in tasks])
+        combo.pack(side="left", padx=8)
+        done_label = ttk.Label(top, text="", foreground=ACCENT_DARK,
+                               font=("Segoe UI", 10, "bold"))
+        done_label.pack(side="right")
+
+        body = ttk.Frame(win, padding=(12, 0, 12, 10))
+        body.pack(fill="both", expand=True)
+
+        desc = label(body, "", wraplength=920, font=("Segoe UI", 11))
+        desc.pack(anchor="w", pady=(4, 2))
+        meta = ttk.Label(body, text="", foreground=MUTED)
+        meta.pack(anchor="w")
+        req = label(body, "", wraplength=920, justify="left")
+        req.pack(anchor="w", pady=(6, 6))
+
+        ttk.Label(body, text="Твой код:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        editor = scrolledtext.ScrolledText(
+            body, height=15, wrap="none", font=("Consolas", 11),
+            relief="flat", padx=10, pady=8)
+        editor.pack(fill="both", expand=True, pady=(2, 6))
+
+        bar = ttk.Frame(body)
+        bar.pack(fill="x")
+        ttk.Button(bar, text="▶ Проверить", style="Accent.TButton",
+                   command=lambda: check_task()).pack(side="left")
+        ttk.Button(bar, text="Подсказка",
+                   command=lambda: messagebox.showinfo(
+                       "Подсказка", current_task()["hint"])).pack(side="left", padx=5)
+        ttk.Button(bar, text="Показать эталон",
+                   command=lambda: show_solution()).pack(side="left", padx=5)
+        ttk.Button(bar, text="Очистить",
+                   command=lambda: editor.delete("1.0", "end")).pack(side="left", padx=5)
+        ttk.Button(bar, text="Закрыть", command=win.destroy).pack(side="right")
+
+        output = scrolledtext.ScrolledText(
+            body, height=7, wrap="word", font=("Consolas", 10),
+            bg="#0f1720", fg="#d7e3dd", relief="flat", padx=10, pady=8)
+        output.pack(fill="x", pady=(8, 0))
+        output.config(state="disabled")
+
+        def out(text):
+            output.config(state="normal")
+            output.delete("1.0", "end")
+            output.insert("1.0", text)
+            output.config(state="disabled")
+
+        def current_task():
+            return tasks[combo.current() if combo.current() >= 0 else 0]
+
+        def load_task(_event=None):
+            task = current_task()
+            desc.config(text=task["task"])
+            meta.config(text=f"{task['language'].upper()} · {task['level']}")
+            req.config(text="Что нужно:\n• " + "\n• ".join(task["requirements"]))
+            editor.delete("1.0", "end")
+            editor.insert("1.0", task["starter"])
+            solved = task["id"] in self.state.get("practical_done", [])
+            done_label.config(text="✓ Зачтено" if solved else "")
+            out("Результат проверки появится здесь.\n"
+                "Ctrl+Enter — проверить. Эталон лучше открывать после попытки.")
+
+        def check_task(_event=None):
+            task = current_task()
+            code = editor.get("1.0", "end")
+            module = courses.load_course(COURSE_KEY)
+            result = practical.check(module, task, code)
+            if result["ok"]:
+                if task["id"] not in self.state.setdefault("practical_done", []):
+                    self.state["practical_done"].append(task["id"])
+                    save_state(self.state)
+                done_label.config(text="✓ Зачтено")
+                out("ВЕРНО ✓\n" + result["message"])
+                self.refresh_progress_tab()
+            else:
+                text = "НЕВЕРНО ✗\n" + result["message"]
+                if result["details"]:
+                    text += "\n\n" + "\n".join(f"• {d}" for d in result["details"])
+                out(text)
+
+        def show_solution():
+            task = current_task()
+            editor.delete("1.0", "end")
+            editor.insert("1.0", task["solution"])
+            out("Эталон вставлен в редактор. Разбери решение и попробуй "
+                "переписать его по памяти.")
+
+        combo.bind("<<ComboboxSelected>>", load_task)
+        editor.bind("<Control-Return>", check_task)
+        editor.bind("<Command-Return>", check_task)
+        load_task()
+        editor.focus_set()
+
+
     def build_sql(self):
         left = ttk.Frame(self.tab_sql, padding=10, width=330)
         left.pack(side="left", fill="y")

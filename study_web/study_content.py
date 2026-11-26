@@ -2,10 +2,16 @@
 """Stepik-структура курсов: модули и шаги."""
 from __future__ import annotations
 
+import copy
 import importlib.util
+import sys
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
+if str(BASE) not in sys.path:
+    sys.path.insert(0, str(BASE))
+
+import practical_tasks  # noqa: E402
 
 
 def _load(name: str):
@@ -179,10 +185,10 @@ def _tasks(module, ids):
 def modules(slug: str) -> list[dict]:
     module = COURSE_DATA[slug]
     result = []
-    for title, steps in MODULE_SPECS[slug]:
+    for module_no, (title, steps) in enumerate(MODULE_SPECS[slug], start=1):
         used: set[str] = set()
         built = []
-        for spec in steps:
+        for step_no, spec in enumerate(steps, start=1):
             kind, step_title = spec[0], spec[1]
             if kind == "theory":
                 built.append({
@@ -195,6 +201,8 @@ def modules(slug: str) -> list[dict]:
                     "type": kind,
                     "title": step_title,
                     "questions": _take_questions(module, spec[2], spec[3], used),
+                    "practical": copy.deepcopy(
+                        practical_tasks.for_step(slug, module_no, step_no)),
                 })
             elif kind == "sql":
                 built.append({

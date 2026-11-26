@@ -64,6 +64,7 @@ def gen_data():
         "plan": m.PLAN,
         "lessons": [list(l) for l in m.LESSONS],
         "quiz": m.QUIZ,
+        "practical": m.practical_tasks.all_for(m.COURSE_ID),
         "sql": m.SQL_TASKS,
         "criteria": [[title, [[txt, w] for txt, w in items]] for title, items in m.CRITERIA],
         "snippets": [[t, c] for t, c in m.SNIPPETS],

@@ -8,6 +8,9 @@ import re
 import sqlite3
 from pathlib import Path
 
+import practical
+import practical_tasks
+
 ROOT = Path(__file__).resolve().parent
 
 
@@ -53,6 +56,7 @@ def main() -> None:
               for t in ("roles", "users", "courses", "application_statuses",
                         "applications", "reviews")))
     check("веб: SQL-задачи выполняются", sql_ok(web))
+    check("веб: практические задания к тестам", practical_ok(web, "web"))
     check("веб: без дублей вопросов", len({q["q"] for q in web.QUIZ}) == len(web.QUIZ))
 
     # --- Программист: 4 модуля, 10+15+25+25 + 25 ---
@@ -83,6 +87,7 @@ def main() -> None:
           "product_items" not in prog.SCHEMA_SQL and "order_items" not in prog.SCHEMA_SQL
           and "CREATE TABLE sizes" not in prog.SCHEMA_SQL)
     check("программист: SQL-задачи выполняются", sql_ok(prog))
+    check("программист: практические задания к тестам", practical_ok(prog, "programmer"))
     check("программист: 19 SQL-задач", len(prog.SQL_TASKS) == 19)
     check("программист: lab_programmer есть",
           (ROOT / "lab_programmer" / "app.py").exists()
@@ -98,8 +103,10 @@ def main() -> None:
     prog_html = (ROOT / "DemoExam-mobile-programmer.html").read_text(encoding="utf-8")
     check("веб-html: 3 модуля", "3 модуля" in web_html)
     check("веб-html: 53 вопроса", "53 вопроса" in web_html)
+    check("веб-html: практика в тестах", "web-exam-skeleton" in web_html and "practiceSel" in web_html)
     check("программист-html: 4 модуля", "4 модуля" in prog_html)
-    check("программист-html: 41 вопрос", "41 вопросов" in prog_html)
+    check("программист-html: 41 вопрос", "41 вопрос" in prog_html)
+    check("программист-html: практика в тестах", "prog-exam-score" in prog_html and "practiceSel" in prog_html)
     check("программист-html: без «5 заданий»", "5 заданий" not in prog_html)
 
     # --- Информационные системы: 6 заданий, 3:30, 75 + 25 ---
@@ -117,9 +124,11 @@ def main() -> None:
               "materials", "product_materials", "operations",
               "product_operations", "orders", "order_items")))
     check("ИС: SQL-задачи выполняются", sql_ok(infosys))
+    check("ИС: практические задания к тестам", practical_ok(infosys, "is"))
     is_html = (ROOT / "DemoExam-mobile-is.html").read_text(encoding="utf-8")
     check("ИС-html: 6 заданий", "6 заданий" in is_html)
     check("ИС-html: 39 вопросов", "39 вопросов" in is_html)
+    check("ИС-html: практика в тестах", "is-exam-json" in is_html and "practiceSel" in is_html)
 
     print("\nВСЕ ПРОВЕРКИ ПРОЙДЕНЫ")
 
@@ -139,6 +148,19 @@ def sql_ok(module) -> bool:
         return False
     finally:
         con.close()
+
+
+def practical_ok(module, slug: str) -> bool:
+    tasks = practical_tasks.all_for(slug)
+    if not tasks:
+        print("Нет практических заданий для", slug)
+        return False
+    for task in tasks:
+        result = practical.check(module, task, task["solution"])
+        if not result["ok"]:
+            print("Практика не проходит:", task["id"], result["details"])
+            return False
+    return True
 
 
 if __name__ == "__main__":

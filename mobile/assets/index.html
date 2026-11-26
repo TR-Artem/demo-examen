@@ -460,6 +460,28 @@ th{background:var(--page);color:var(--ink);font-weight:600}
             <button class="btn ghost" id="quizNext" disabled>Следующий вопрос →</button>
           </div>
         </div>
+
+        <div class="card">
+          <label class="field-label" for="practiceSel">Практическое задание по теме</label>
+          <select id="practiceSel"></select>
+          <div class="note" id="practiceMeta" style="margin-top:8px"></div>
+          <p id="practiceTask" style="margin:10px 0 6px"></p>
+          <div class="note" id="practiceReq"></div>
+          <details style="margin:10px 0">
+            <summary style="cursor:pointer;font-weight:600">Подсказка</summary>
+            <div class="note" id="practiceHint" style="margin-top:6px"></div>
+          </details>
+          <label class="field-label" for="practiceCode">Твой код</label>
+          <textarea id="practiceCode" spellcheck="false" style="min-height:220px"></textarea>
+          <div class="row" style="margin-top:11px">
+            <button class="btn primary" id="practiceCheck">▶ Проверить решение</button>
+            <button class="btn ghost" id="practiceStarter">Заготовка</button>
+            <button class="btn ghost" id="practiceSolution">Эталон</button>
+            <button class="btn ghost" id="practiceClear">Очистить</button>
+          </div>
+          <pre id="practiceSolutionBox" hidden style="white-space:pre-wrap"></pre>
+          <pre id="practiceOut" style="margin-top:11px">Результат проверки появится здесь.</pre>
+        </div>
       </section>
 
       <!-- ================= SQL ================= -->
@@ -567,7 +589,7 @@ const KEY = "demoexam09_progress_v1";
 const DEF = {
   plan_done: [], theory_read: [],
   quiz: { asked: 0, correct: 0, by_topic: {} },
-  sql_done: [], exam_checks: [], exam_attempts: [],
+  sql_done: [], practical_done: [], exam_checks: [], exam_attempts: [],
   thresholds: { "3": 50, "4": 70, "5": 90 },
   days_active: [], dark: false
 };
@@ -576,7 +598,7 @@ function load(){
   let s = JSON.parse(JSON.stringify(DEF));
   try { const o = JSON.parse(localStorage.getItem(KEY) || "null"); if(o && typeof o === "object") s = Object.assign(s, o); } catch(e){}
   // Защита от неполного/старого JSON (например, при переносе прогресса)
-  for(const k of ["plan_done","theory_read","sql_done","exam_checks","exam_attempts","days_active"])
+  for(const k of ["plan_done","theory_read","sql_done","practical_done","exam_checks","exam_attempts","days_active"])
     if(!Array.isArray(s[k])) s[k] = [];
   if(!s.quiz || typeof s.quiz !== "object") s.quiz = {asked:0,correct:0,by_topic:{}};
   if(!s.quiz.by_topic || typeof s.quiz.by_topic !== "object") s.quiz.by_topic = {};
@@ -600,7 +622,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.rand
 const STEPS = [
   {tab:"plan",     title:"План на 12 недель",  kicker:"Модуль 1 · Подготовка", sub:"60 занятий · 12 недель · прогресс сохраняется автоматически"},
   {tab:"theory",   title:"Теория",             kicker:"Модуль 1 · Подготовка", sub:"15 уроков по веб-разработке · отметь прочитанное"},
-  {tab:"quiz",     title:"Тесты",              kicker:"Модуль 1 · Подготовка", sub:"53 вопроса · тренировка и экзамен на 20 вопросов"},
+  {tab:"quiz",     title:"Тесты",              kicker:"Модуль 1 · Подготовка", sub:"53 вопроса + практика с кодом · тренировка и экзамен"},
   {tab:"sql",      title:"SQL-практика",       kicker:"Модуль 2 · Практика",   sub:"19 задач с автопроверкой на встроенном SQLite"},
   {tab:"exam",     title:"Пробный экзамен",    kicker:"Модуль 2 · Практика",   sub:"чек-лист на 100 баллов · таймер 4 часа · оценка"},
   {tab:"sheets",   title:"Шпаргалки",          kicker:"Модуль 3 · Материалы",  sub:"13 готовых фрагментов кода для экзамена"},
@@ -647,11 +669,13 @@ el("overlay").onclick=()=>goTo(currentTab());
 el("pins").innerHTML=STEPS.map((s,i)=>`<i title="${esc(s.title)}"${i===0?' class="on"':''}></i>`).join("");
 function overallProgress(){
   const plan=S.plan_done.length, theory=S.theory_read.length, sql=S.sql_done.length;
+  const practical=(S.practical_done||[]).length, pTotal=(D.practical||[]).length;
   const q=S.quiz, score=(typeof examScore==="function") ? examScore() : 0;
   const overall = plan/Math.max(1,D.plan.length)*40
                 + theory/Math.max(1,D.lessons.length)*15
                 + sql/Math.max(1,D.sql.length)*20
-                + (q.correct/Math.max(1,q.asked))*10
+                + (q.correct/Math.max(1,q.asked))*5
+                + practical/Math.max(1,pTotal)*5
                 + score/D.max_score*15;
   return Math.max(0,Math.min(100,overall||0));
 }
@@ -664,7 +688,7 @@ function updateChrome(){
   const done={
     plan:S.plan_done.length>=D.plan.length,
     theory:S.theory_read.length>=D.lessons.length,
-    quiz:S.quiz.asked>0,
+    quiz:S.quiz.asked>0 && (S.practical_done||[]).length>0,
     sql:S.sql_done.length>=D.sql.length,
     exam:S.exam_attempts.length>0,
     sheets:false,
@@ -792,6 +816,187 @@ el("quizAnswer").onclick=()=>{
   el("quizAnswer").disabled=true; el("quizNext").disabled=false; updateQuizScore();
 };
 el("quizNext").onclick=()=>nextQ(false);
+
+/* ---------- ПРАКТИКА К ТЕСТАМ ---------- */
+let pTasks=[], pCur=null;
+
+function practiceCheckPatterns(code, require, forbid, okMessage){
+  const miss=[], bad=[];
+  for(const raw of require||[]){
+    const item = typeof raw==="string" ? {pattern:raw} : raw;
+    try{ if(!new RegExp(item.pattern,"im").test(code)) miss.push(item.label||item.pattern); }
+    catch(e){ miss.push("ошибка правила: "+(item.label||item.pattern)); }
+  }
+  for(const raw of forbid||[]){
+    const item = typeof raw==="string" ? {pattern:raw} : raw;
+    try{ if(new RegExp(item.pattern,"im").test(code)) bad.push(item.label||item.pattern); }
+    catch(e){}
+  }
+  const details=[];
+  for(const m of miss) details.push("Не найдено: "+m);
+  for(const b of bad) details.push("Убери: "+b);
+  return {ok:!details.length, message:details.length?"Решение пока не проходит проверку.":(okMessage||"Все требования выполнены."), details};
+}
+
+function practiceHtml(code, spec){
+  const miss=[], bad=[];
+  let doc;
+  try{ doc=new DOMParser().parseFromString(code,"text/html"); }
+  catch(e){ return {ok:false,message:"Не удалось разобрать HTML.",details:[String(e)]}; }
+  const tags=[...doc.querySelectorAll("*")].map(x=>x.tagName.toLowerCase());
+  for(const tag of spec.require_tags||[]){
+    if(!tags.includes(String(tag).toLowerCase())) miss.push("тег <"+tag+">");
+  }
+  for(const item of spec.require_attrs||[]){
+    const [tag,attr,value]=item;
+    const nodes=[...doc.querySelectorAll(tag)];
+    const found=nodes.some(n=>n.hasAttribute(attr) &&
+      (value==null || String(n.getAttribute(attr)).toLowerCase()===String(value).toLowerCase()));
+    if(!found) miss.push(value==null?`атрибут ${attr} у <${tag}>`:`${attr}="${value}" у <${tag}>`);
+  }
+  const text=(doc.documentElement.textContent||"").toLowerCase();
+  for(const needle of spec.text||[]) if(!text.includes(String(needle).toLowerCase())) miss.push("текст «"+needle+"»");
+  const pat=practiceCheckPatterns(code,spec.require,spec.forbid,"");
+  miss.push(...pat.details.filter(x=>x.startsWith("Не найдено: ")).map(x=>x.slice(11)));
+  bad.push(...pat.details.filter(x=>x.startsWith("Убери: ")).map(x=>x.slice(7)));
+  const details=[...miss.map(x=>"Не найдено: "+x), ...bad.map(x=>"Убери: "+x)];
+  return {ok:!details.length,message:details.length?"Разметка пока не соответствует заданию.":"Разметка соответствует требованиям.",details};
+}
+
+function practiceJson(code, spec){
+  let data;
+  try{ data=JSON.parse(code); }
+  catch(e){ return {ok:false,message:"Это не валидный JSON.",details:[e.message]}; }
+  if(!data || typeof data!=="object" || Array.isArray(data))
+    return {ok:false,message:"На верхнем уровне нужен JSON-объект.",details:[]};
+  const miss=[];
+  for(const key of spec.keys||[]) if(!(key in data)) miss.push("ключ "+key);
+  for(const [key,len] of Object.entries(spec.list_len||{})){
+    if(!Array.isArray(data[key])) miss.push(key+" должен быть массивом");
+    else if(data[key].length!==len) miss.push(`в ${key} должно быть элементов: ${len}, сейчас ${data[key].length}`);
+  }
+  for(const [path,total] of Object.entries(spec.sum||{})){
+    const [base,field]=path.split("[].");
+    const list=data[base];
+    if(!Array.isArray(list)||!field){ miss.push("не удалось посчитать сумму "+path); continue; }
+    const actual=list.reduce((acc,item)=>acc+(Number(item&&item[field])||0),0);
+    if(Math.round(actual*100)!==Math.round(Number(total)*100)) miss.push(`сумма ${path} = ${actual}, нужна ${total}`);
+  }
+  for(const [key,fields] of Object.entries(spec.item_keys||{})){
+    const list=data[key];
+    if(!Array.isArray(list)){ miss.push(key+" должен быть массивом"); continue; }
+    list.forEach((item,i)=>{
+      if(!item||typeof item!=="object"){ miss.push(`${key}[${i+1}] должен быть объектом`); return; }
+      for(const field of fields) if(!(field in item)) miss.push(`в ${key}[${i+1}] нет поля ${field}`);
+    });
+  }
+  const pat=practiceCheckPatterns(code,spec.require,spec.forbid,"");
+  miss.push(...pat.details.filter(x=>x.startsWith("Не найдено: ")).map(x=>x.slice(11)));
+  const bad=pat.details.filter(x=>x.startsWith("Убери: ")).map(x=>x.slice(7));
+  const details=[...miss.map(x=>"Не найдено: "+x), ...bad.map(x=>"Убери: "+x)];
+  return {ok:!details.length,message:details.length?"JSON пока не соответствует заданию.":"JSON корректен и соответствует требованиям.",details};
+}
+
+async function practiceSql(task, code, isDdl){
+  const spec=task.check||{};
+  try{
+    const SQLMod=await ensureSQL();
+    const schema = Object.prototype.hasOwnProperty.call(spec,"schema_sql") ? spec.schema_sql : (D.schema||"");
+    const ref=new SQLMod.Database();
+    const db=new SQLMod.Database();
+    if(schema.trim()){ ref.run(schema); db.run(schema); }
+    let expected, actual, cols;
+    if(spec.mode==="script" || isDdl){
+      ref.run(spec.expected);
+      expected=query(ref,spec.verify).rows;
+      db.run(code);
+      const r=query(db,spec.verify); actual=r.rows; cols=r.cols;
+    }else{
+      expected=query(ref,spec.expected).rows;
+      const r=query(db,code); actual=r.rows; cols=r.cols;
+    }
+    ref.close(); db.close();
+    if(!rowsEqual(actual,expected)){
+      return {ok:false,message:"Результат отличается от эталона.",
+        details:[`Строк получено: ${actual.length}, ожидалось: ${expected.length}.`]};
+    }
+    if(isDdl){
+      const pat=practiceCheckPatterns(code,spec.require,spec.forbid,"Таблицы созданы с нужными ограничениями.");
+      return pat;
+    }
+    return {ok:true,message:"Запрос возвращает ожидаемый результат.",details:[]};
+  }catch(e){
+    return {ok:false,message:"Ошибка SQL: "+(e.message||String(e)),details:[]};
+  }
+}
+
+async function checkPractical(task, code){
+  const text=(code||"").trim();
+  if(!text) return {ok:false,message:"Напиши решение в редакторе.",details:[]};
+  const spec=task.check||{};
+  const type=spec.type||"patterns";
+  if(type==="html") return practiceHtml(text,spec);
+  if(type==="json") return practiceJson(text,spec);
+  if(type==="sql"||type==="ddl") return practiceSql(task,text,type==="ddl");
+  if(type==="python"){
+    if(Array.isArray(spec.offline_require)){
+      return practiceCheckPatterns(text,spec.offline_require,[],"Структурная проверка пройдена. Полный запуск Python с тестами доступен в учебном портале и тренажёре.");
+    }
+    return {ok:false,message:"В офлайн-версии Python не запускается. Открой учебный портал или тренажёр для полной проверки.",details:[]};
+  }
+  return practiceCheckPatterns(text,spec.require,spec.forbid,"Все требования выполнены.");
+}
+
+function practiceKey(task){ return "demo-practice:"+task.id; }
+function rebuildPractice(){
+  const topic=el("quizTopic").value;
+  const all=D.practical||[];
+  pTasks=all.filter(t=>topic==="Все темы"||t.topic===topic);
+  if(!pTasks.length) pTasks=all.slice();
+  el("practiceSel").innerHTML=pTasks.map((t,i)=>`<option value="${i}">${S.practical_done.includes(t.id)?"✓ ":""}${esc(t.title)}</option>`).join("");
+  loadPractice();
+}
+function loadPractice(){
+  const i=+el("practiceSel").value||0;
+  pCur=pTasks[i];
+  if(!pCur){ el("practiceTask").textContent="Для этой темы заданий пока нет."; return; }
+  el("practiceMeta").textContent=`${pCur.language.toUpperCase()} · ${pCur.level}${S.practical_done.includes(pCur.id)?" · ✓ зачтено":""}`;
+  el("practiceTask").textContent=pCur.task;
+  el("practiceReq").innerHTML="<b>Что нужно:</b><br>• "+pCur.requirements.map(esc).join("<br>• ");
+  el("practiceHint").textContent=pCur.hint;
+  el("practiceSolutionBox").textContent=pCur.solution;
+  el("practiceSolutionBox").hidden=true;
+  el("practiceCode").value=localStorage.getItem(practiceKey(pCur))||pCur.starter;
+  el("practiceOut").textContent="Результат проверки появится здесь. Ctrl+Enter — проверить.";
+}
+el("quizTopic").addEventListener("change",rebuildPractice);
+el("practiceSel").onchange=loadPractice;
+el("practiceStarter").onclick=()=>{ if(pCur){ el("practiceCode").value=pCur.starter; localStorage.setItem(practiceKey(pCur),pCur.starter); } };
+el("practiceClear").onclick=()=>{ el("practiceCode").value=""; if(pCur) localStorage.removeItem(practiceKey(pCur)); el("practiceCode").focus(); };
+el("practiceSolution").onclick=()=>{ const box=el("practiceSolutionBox"); box.hidden=!box.hidden; };
+el("practiceCode").addEventListener("input",()=>{ if(pCur) localStorage.setItem(practiceKey(pCur),el("practiceCode").value); });
+el("practiceCode").addEventListener("keydown",(e)=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){ e.preventDefault(); el("practiceCheck").click(); }
+});
+el("practiceCheck").onclick=async()=>{
+  if(!pCur) return;
+  el("practiceCheck").disabled=true;
+  el("practiceOut").textContent="Проверяю…";
+  try{
+    const result=await checkPractical(pCur,el("practiceCode").value);
+    const lines=[(result.ok?"✓ ВЕРНО! ":"✗ ПОКА НЕВЕРНО. ")+result.message, ...(result.details||[])];
+    el("practiceOut").textContent=lines.join("\n");
+    if(result.ok && !S.practical_done.includes(pCur.id)){
+      S.practical_done.push(pCur.id); save();
+      const idx=+el("practiceSel").value;
+      if(el("practiceSel").options[idx]) el("practiceSel").options[idx].text="✓ "+pCur.title;
+      el("practiceMeta").textContent=`${pCur.language.toUpperCase()} · ${pCur.level} · ✓ зачтено`;
+    }
+  }catch(e){
+    el("practiceOut").textContent="Ошибка проверки: "+(e.message||String(e));
+  }finally{ el("practiceCheck").disabled=false; }
+};
+rebuildPractice();
 
 /* ---------- SQL ---------- */
 let SQL=null;
@@ -977,6 +1182,7 @@ showSheet();
 /* ---------- ПРОГРЕСС ---------- */
 function renderProgress(){
   const plan=S.plan_done.length, theory=S.theory_read.length, sql=S.sql_done.length;
+  const practical=(S.practical_done||[]).length, pTotal=Math.max(1,(D.practical||[]).length);
   const q=S.quiz, score=examScore();
   const overall=overallProgress();
   el("prOverall").textContent=overall.toFixed(0)+"%";
@@ -988,7 +1194,8 @@ function renderProgress(){
     : "Отличная готовность. Осталось отточить тайминг и артефакты для «5».";
   el("prStats").innerHTML=[
     ["План",`${plan}/${D.plan.length} занятий`],["Теория",`${theory}/${D.lessons.length} уроков`],
-    ["SQL",`${sql}/${D.sql.length} задач`],["Тесты",`${q.correct}/${q.asked} верных`],
+    ["SQL",`${sql}/${D.sql.length} задач`],["Практика",`${practical}/${pTotal} заданий`],
+    ["Тесты",`${q.correct}/${q.asked} верных`],
     ["Пробник",`${score}/${D.max_score} б.`],["Дней в приложении",S.days_active.length]
   ].map(([k,v])=>`<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join("");
   const topics=Object.entries(S.quiz.by_topic).sort((a,b)=>a[1].correct/Math.max(1,a[1].asked)-b[1].correct/Math.max(1,b[1].asked));

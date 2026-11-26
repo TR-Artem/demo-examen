@@ -259,3 +259,68 @@ h1, h2 { line-height: 1.2; }
   .syllabus { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .lesson-wrap { padding: 18px 16px 60px; }
 }
+
+/* --- Практические задания в тестах --- */
+.practical { margin-top: 28px; border-top: 2px solid var(--line); padding-top: 22px; }
+.practical__head { margin-bottom: 14px; }
+.practical__head h2 { margin: 0 0 6px; font-size: 1.25rem; }
+.practical__head p { margin: 0; }
+.practice-task {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 18px 20px;
+  margin: 0 0 16px;
+  background: #fbfcfd;
+}
+.practice-task__head {
+  display: flex; justify-content: space-between; gap: 14px; align-items: flex-start;
+}
+.practice-task__head h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.practice-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.practice-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: #eef4ff; color: var(--brand-d);
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.practice-badge--level { background: #f1f5f9; color: var(--muted); }
+.practice-task__text { margin: 12px 0; }
+.requirements {
+  background: #fff; border: 1px dashed #cbd5e1; border-radius: 9px;
+  padding: 11px 14px; margin: 12px 0;
+}
+.requirements__title { font-size: .78rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+.requirements ul { margin: 0; padding-left: 20px; }
+.requirements li { margin: 3px 0; font-size: .9rem; }
+.hint-box { margin: 12px 0; background: #fffbeb; border: 1px solid #fde68a; border-radius: 9px; padding: 9px 13px; }
+.hint-box summary { cursor: pointer; font-weight: 700; color: #92400e; }
+.hint-box p { margin: 8px 0 0; font-size: .9rem; }
+.practice-form { margin-top: 12px; }
+.editor-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #1f2937; color: #cbd5e1; border-radius: 10px 10px 0 0;
+  padding: 7px 10px; font-size: .78rem;
+}
+.editor-bar__lang { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #93c5fd; }
+.editor-bar__hint { margin-left: auto; color: #94a3b8; }
+.editor-bar .btn { min-height: 28px; padding: 3px 9px; font-size: .76rem; background: #334155; color: #e2e8f0; border-color: #475569; }
+.editor-bar .btn:hover { background: #475569; }
+.code-editor {
+  width: 100%; display: block; margin: 0; padding: 14px 16px;
+  border: 1px solid #0f172a; border-top: 0; border-radius: 0 0 10px 10px;
+  background: #0f172a; color: #e2e8f0;
+  font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  tab-size: 2; resize: vertical; min-height: 220px;
+}
+.code-editor:focus { outline: 2px solid rgba(59, 130, 246, .45); outline-offset: 0; }
+.practice-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 10px; }
+.solution {
+  margin: 12px 0 0; padding: 14px 16px; border-radius: 10px;
+  background: #0f172a; color: #dbeafe; overflow: auto;
+  font: 12.5px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+}
+.check-details { margin: 8px 0 0; padding-left: 20px; }
+.check-details li { margin: 2px 0; }
+.result--pending { border-left: 4px solid #f59e0b; background: #fffbeb; }

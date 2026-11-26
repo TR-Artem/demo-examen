@@ -16,6 +16,8 @@ import os
 import sys
 from pathlib import Path
 
+import practical_tasks
+
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "mobile" / "assets"
 
@@ -55,6 +57,8 @@ VARIANTS = {
                 "3. На компьютере запусти lab_programmer/app.py — пройди вход, каталог и заказы.",
             "15 уроков по веб-разработке · отметь прочитанное":
                 "15 уроков по Python, SQL и заданиям · отметь прочитанное",
+            "53 вопроса + практика с кодом · тренировка и экзамен":
+                "41 вопрос + практика с кодом · тренировка и экзамен",
             "53 вопроса": "__QUIZ_COUNT__",
         },
         "data_js": False,
@@ -80,6 +84,8 @@ VARIANTS = {
                 "3. На компьютере запусти study_web/app.py и пройди курс по шагам.",
             "15 уроков по веб-разработке · отметь прочитанное":
                 "15 уроков по ER, SQL, ИС и API · отметь прочитанное",
+            "53 вопроса + практика с кодом · тренировка и экзамен":
+                "39 вопросов + практика с кодом · тренировка и экзамен",
             "53 вопроса": "__QUIZ_COUNT__",
         },
         "data_js": False,
@@ -98,10 +104,12 @@ def load_trainer(course: str):
 
 
 def course_data(module) -> str:
+    key = getattr(module, "COURSE_ID", "web")
     data = {
         "plan": module.PLAN,
         "lessons": [list(item) for item in module.LESSONS],
         "quiz": module.QUIZ,
+        "practical": practical_tasks.all_for(key),
         "sql": module.SQL_TASKS,
         "criteria": [[title, [[text, weight] for text, weight in items]]
                      for title, items in module.CRITERIA],
@@ -113,9 +121,19 @@ def course_data(module) -> str:
         data, ensure_ascii=False, separators=(",", ":")) + ";\n"
 
 
+def questions_label(count: int) -> str:
+    if count % 10 == 1 and count % 100 != 11:
+        word = "вопрос"
+    elif count % 10 in (2, 3, 4) and count % 100 not in (12, 13, 14):
+        word = "вопроса"
+    else:
+        word = "вопросов"
+    return f"{count} {word}"
+
+
 def apply_variant(html: str, replacements: dict[str, str], quiz_count: int) -> str:
     for old, new in replacements.items():
-        new = new.replace("__QUIZ_COUNT__", f"{quiz_count} вопросов")
+        new = new.replace("__QUIZ_COUNT__", questions_label(quiz_count))
         if old not in html:
             raise RuntimeError(f"Не найдена строка для замены: {old[:80]!r}")
         html = html.replace(old, new)

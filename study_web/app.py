@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -21,6 +22,10 @@ from security import (get_csrf_token, hash_password, login_required,
 
 ROOT = Path(__file__).resolve().parent
 BASE = ROOT.parent
+if str(BASE) not in sys.path:
+    sys.path.insert(0, str(BASE))
+
+import practical  # noqa: E402
 
 COURSES = {
     "web": {
@@ -73,6 +78,16 @@ def _next_url(slug: str, module_no: int, step_no: int, modules) -> str:
     if module_no < len(modules):
         return url_for("module", slug=slug, module_no=module_no + 1)
     return url_for("module", slug=slug, module_no=module_no)
+
+
+def _is_done(progress: dict, module_no: int, step_no: int) -> bool:
+    item = progress.get((module_no, step_no))
+    return bool(item and item.get("status") == "done")
+
+
+def _quiz_passed(progress: dict, module_no: int, step_no: int) -> bool:
+    item = progress.get((module_no, step_no))
+    return bool(item and item.get("status") in {"quiz", "done"})
 
 
 def create_app(test_config: dict | None = None) -> Flask:
@@ -172,7 +187,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         target_module, target_step = 1, 1
         for module_no, module in enumerate(modules, start=1):
             for step_no in range(1, len(module["steps"]) + 1):
-                if not progress.get((module_no, step_no)):
+                if not _is_done(progress, module_no, step_no):
                     target_module, target_step = module_no, step_no
                     return redirect(url_for("step", slug=slug,
                                             module_no=target_module,
@@ -192,7 +207,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         module = modules[module_no - 1]
         target = 1
         for step_no in range(1, len(module["steps"]) + 1):
-            if not progress.get((module_no, step_no)):
+            if not _is_done(progress, module_no, step_no):
                 target = step_no
                 break
         return redirect(url_for("step", slug=slug, module_no=module_no,
@@ -213,15 +228,25 @@ def create_app(test_config: dict | None = None) -> Flask:
         current = module["steps"][step_no - 1]
         progress_repo = ProgressRepository(db.get_db())
         progress = progress_repo.for_course(g.user.user_id, slug)
-        for mi, mod in enumerate(modules, start=1):
-            for si, st in enumerate(mod["steps"], start=1):
-                st["done"] = bool(progress.get((mi, si)))
+        practical_all = progress_repo.practical_for_course(g.user.user_id, slug)
+        practical_done = {
+            task_id for mi, si, task_id in practical_all
+            if mi == module_no and si == step_no
+        }
+
+        def sync_done_flags() -> None:
+            for mi, mod in enumerate(modules, start=1):
+                for si, st in enumerate(mod["steps"], start=1):
+                    st["done"] = _is_done(progress, mi, si)
+
+        sync_done_flags()
         total_steps = sum(len(mod["steps"]) for mod in modules)
         done_steps = sum(1 for mi, mod in enumerate(modules, start=1)
                          for si in range(1, len(mod["steps"]) + 1)
-                         if progress.get((mi, si)))
+                         if _is_done(progress, mi, si))
         result = None
         sql_result = None
+        practical_result = None
         session_key = f"sql_done:{slug}:{module_no}:{step_no}"
         sql_done = set(session.get(session_key, []))
         just_done = False
@@ -231,7 +256,35 @@ def create_app(test_config: dict | None = None) -> Flask:
                 progress_repo.mark(g.user.user_id, slug, module_no, step_no)
                 return redirect(_next_url(slug, module_no, step_no, modules))
 
-            if current["type"] in ("quiz", "test"):
+            practical_id = request.form.get("practical_id")
+            if practical_id and current.get("practical"):
+                task = next((t for t in current["practical"]
+                             if t["id"] == practical_id), None)
+                if task is not None:
+                    code = request.form.get("code", "")
+                    check = practical.check(
+                        study_content.COURSE_DATA[slug], task, code)
+                    task["user_code"] = code
+                    if check["ok"]:
+                        progress_repo.mark_practical(
+                            g.user.user_id, slug, module_no, step_no,
+                            practical_id)
+                        practical_done.add(practical_id)
+                        task_ids = {t["id"] for t in current["practical"]}
+                        if (task_ids <= practical_done
+                                and _quiz_passed(progress, module_no, step_no)):
+                            progress_repo.mark(g.user.user_id, slug,
+                                               module_no, step_no, status="done")
+                            just_done = True
+                    practical_result = {
+                        "task_id": practical_id,
+                        "code": code,
+                        "ok": check["ok"],
+                        "message": check["message"],
+                        "details": check["details"],
+                    }
+
+            elif current["type"] in ("quiz", "test"):
                 answers = {}
                 details = []
                 score = 0
@@ -246,16 +299,22 @@ def create_app(test_config: dict | None = None) -> Flask:
                 percent = round(score / total * 100) if total else 0
                 threshold = 70 if current["type"] == "test" else 60
                 passed = percent >= threshold
+                task_ids = {t["id"] for t in current.get("practical", [])}
+                practical_ready = task_ids <= practical_done
                 if passed:
+                    status = "done" if practical_ready else "quiz"
                     progress_repo.mark(g.user.user_id, slug, module_no,
-                                       step_no, percent)
+                                       step_no, percent, status=status)
+                    just_done = status == "done"
                 result = {
                     "score": score, "total": total, "percent": percent,
                     "passed": passed, "threshold": threshold,
                     "answers": answers, "details": details,
+                    "practical_pending": passed and not practical_ready,
+                    "complete": passed and practical_ready,
                 }
 
-            if current["type"] == "sql":
+            elif current["type"] == "sql":
                 task_id = request.form.get("task_id")
                 task = next((t for t in current["tasks"] if t["id"] == task_id), None)
                 if task is not None:
@@ -274,19 +333,18 @@ def create_app(test_config: dict | None = None) -> Flask:
                                   "actual": actual, "expected": expected}
 
         progress = progress_repo.for_course(g.user.user_id, slug)
-        for mi, mod in enumerate(modules, start=1):
-            for si, st in enumerate(mod["steps"], start=1):
-                st["done"] = bool(progress.get((mi, si)))
+        sync_done_flags()
         done_steps = sum(1 for mi, mod in enumerate(modules, start=1)
                          for si in range(1, len(mod["steps"]) + 1)
-                         if progress.get((mi, si)))
-        done = bool(progress.get((module_no, step_no))) or just_done
+                         if _is_done(progress, mi, si))
+        done = _is_done(progress, module_no, step_no) or just_done
         return render_template(
             "step.html", slug=slug, course=COURSES[slug],
             module_no=module_no, step_no=step_no, module=module,
             step=current, result=result, done=done, sql_result=sql_result,
-            sql_done=sql_done, modules=modules, total_steps=total_steps,
-            done_steps=done_steps,
+            sql_done=sql_done, practical_result=practical_result,
+            practical_done=practical_done, modules=modules,
+            total_steps=total_steps, done_steps=done_steps,
             prev_url=_prev_url(slug, module_no, step_no, modules),
             next_url=_next_url(slug, module_no, step_no, modules),
             module_url=url_for("module", slug=slug, module_no=module_no),

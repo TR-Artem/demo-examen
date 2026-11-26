@@ -63,12 +63,32 @@ class ProgressRepository:
         }
 
     def mark(self, user_id: int, course: str, module: int, step: int,
-             score: int | None = None) -> None:
+             score: int | None = None, status: str = "done") -> None:
         self.db.execute(
             "INSERT INTO progress (user_id, course, module, step, status, score) "
-            "VALUES (?, ?, ?, ?, 'done', ?) "
+            "VALUES (?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(user_id, course, module, step) DO UPDATE SET "
-            "status = 'done', score = excluded.score, updated_at = datetime('now')",
-            (user_id, course, module, step, score),
+            "status = excluded.status, score = excluded.score, "
+            "updated_at = datetime('now')",
+            (user_id, course, module, step, status, score),
+        )
+        self.db.commit()
+
+    def practical_for_course(self, user_id: int, course: str) -> set[tuple[int, int, str]]:
+        rows = self.db.execute(
+            "SELECT module, step, task_id FROM practical_progress "
+            "WHERE user_id = ? AND course = ?",
+            (user_id, course),
+        ).fetchall()
+        return {(row["module"], row["step"], row["task_id"]) for row in rows}
+
+    def mark_practical(self, user_id: int, course: str, module: int,
+                       step: int, task_id: str) -> None:
+        self.db.execute(
+            "INSERT INTO practical_progress "
+            "(user_id, course, module, step, task_id) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(user_id, course, module, step, task_id) DO UPDATE SET "
+            "updated_at = datetime('now')",
+            (user_id, course, module, step, task_id),
         )
         self.db.commit()

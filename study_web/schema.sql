@@ -17,3 +17,13 @@ CREATE TABLE IF NOT EXISTS progress (
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (user_id, course, module, step)
 );
+
+CREATE TABLE IF NOT EXISTS practical_progress (
+    user_id    INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    course     TEXT NOT NULL,
+    module     INTEGER NOT NULL,
+    step       INTEGER NOT NULL,
+    task_id    TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, course, module, step, task_id)
+);

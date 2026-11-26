@@ -129,7 +129,42 @@ class StudyAppTest(unittest.TestCase):
         data = {f"q{i}": str(q["ans"]) for i, q in enumerate(step["questions"])}
         response = self.client.post("/course/web/module/1/step/2", data=data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Шаг зачтён", response.get_data(as_text=True))
+        text = response.get_data(as_text=True)
+        self.assertIn("Тест сдан", text)
+        self.assertNotIn("Шаг зачтён", text)
+
+        task = step["practical"][0]
+        response = self.client.post("/course/web/module/1/step/2", data={
+            "practical_id": task["id"],
+            "code": task["solution"],
+        })
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        self.assertIn("Верно!", text)
+        self.assertIn("Шаг зачтён", text)
+
+    def test_practical_rejects_starter(self):
+        self.login()
+        step = study_content.modules("web")[0]["steps"][3]
+        task = step["practical"][0]
+        response = self.client.post("/course/web/module/1/step/4", data={
+            "practical_id": task["id"],
+            "code": task["starter"],
+        })
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        self.assertIn("Пока неверно", text)
+        self.assertIn("Не найдено", text)
+
+    def test_every_quiz_has_practical(self):
+        for slug in ("web", "programmer", "is"):
+            modules = study_content.modules(slug)
+            for module_no, module in enumerate(modules, start=1):
+                for step_no, step in enumerate(module["steps"], start=1):
+                    if step["type"] in ("quiz", "test"):
+                        self.assertTrue(
+                            step.get("practical"),
+                            f"{slug} {module_no}.{step_no}: нет практики")
 
     def test_sql_step(self):
         self.login()
